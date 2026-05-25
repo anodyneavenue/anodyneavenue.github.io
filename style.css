@@ -154,6 +154,11 @@ footer {
   text-transform: uppercase;
 }
 
+#section_intro,
+main > .muted {
+  margin-bottom: 2.5rem;
+}
+
 .card {
   display: block;
   padding: 1rem 0;
