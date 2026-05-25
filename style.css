@@ -69,7 +69,6 @@ nav a:hover {
   overflow: auto;
   background: var(--panel);
   border-right: 1px solid var(--line);
-  transition: transform .18s;
   display: flex;
   flex-direction: column;
 }
@@ -84,7 +83,6 @@ main {
   width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
   margin-left: max(calc(var(--side) + 1.2rem), calc((100vw - var(--read)) / 2));
   padding: 5rem 0;
-  transition: width .18s, margin .18s;
 }
 
 .side_closed main {
