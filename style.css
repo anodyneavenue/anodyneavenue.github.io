@@ -35,6 +35,14 @@ a {
 }
 
 a:hover {
+  text-decoration: none;
+}
+
+h3 a:hover,
+.title:hover,
+nav a:hover,
+details a:hover,
+.grid a:hover {
   text-decoration: underline;
 }
 
@@ -48,6 +56,7 @@ a:hover {
   border: 1px solid var(--line);
   background: var(--bg);
   color: var(--fg);
+  cursor: pointer;
 }
 
 #sidebar {
@@ -153,18 +162,19 @@ footer {
   color: var(--muted);
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .35rem;
+.back {
+  margin-bottom: 2rem;
+  padding: .35rem .6rem;
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
 }
 
-.tags span {
-  border: 1px solid var(--line);
-  border-radius: 99rem;
-  padding: .1rem .5rem;
-  color: var(--muted);
-  font-size: .78rem;
+.back:hover {
+  background: var(--panel);
 }
 
 .grid {
