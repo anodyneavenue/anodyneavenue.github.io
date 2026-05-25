@@ -432,4 +432,115 @@ const posts = [
       <p>This is the bottom of the current test archive.</p>
     `
   }
+  ,
+  {
+    slug: "edition_test_essay_first",
+    title: "Edition Test Essay",
+    type: "essays",
+    date: "2024-01-01",
+    edition: "1st edition",
+    abstract: "Old essay edition. This should appear in the archive, but not on the Essays section page.",
+    body: `
+      <p>This is the first edition of the essay. It should remain visible in the archive.</p>
+    `
+  },
+  {
+    slug: "edition_test_essay_second",
+    title: "Edition Test Essay",
+    type: "essays",
+    date: "2025-01-01",
+    edition: "2nd edition",
+    abstract: "Middle essay edition. This should appear in the archive, but not on the Essays section page.",
+    body: `
+      <p>This is the second edition of the essay. It should remain visible in the archive.</p>
+    `
+  },
+  {
+    slug: "edition_test_essay_third",
+    title: "Edition Test Essay",
+    type: "essays",
+    date: "2026-01-01",
+    edition: "3rd edition",
+    abstract: "Latest essay edition. This should be the only version shown on the Essays section page.",
+    body: `
+      <p>This is the third and latest edition of the essay. It should appear in both the archive and the Essays section page.</p>
+    `
+  },
+  {
+    slug: "edition_test_guide_first",
+    title: "Edition Test Guide",
+    type: "guides",
+    date: "2023-06-01",
+    edition: "1st edition",
+    abstract: "Old guide edition. Archive only.",
+    body: `
+      <p>This is the first guide edition.</p>
+    `
+  },
+  {
+    slug: "edition_test_guide_second",
+    title: "Edition Test Guide",
+    type: "guides",
+    date: "2026-06-01",
+    edition: "2nd edition",
+    abstract: "Latest guide edition. This should be the only version shown on the Guides section page.",
+    body: `
+      <p>This is the second and latest guide edition.</p>
+    `
+  },
+  {
+    slug: "edition_test_blog_first",
+    title: "Edition Test Blog",
+    type: "blog",
+    date: "2024-04-04",
+    edition: "1st edition",
+    abstract: "Old blog edition. Archive only.",
+    body: `
+      <p>This is the first blog edition.</p>
+    `
+  },
+  {
+    slug: "edition_test_blog_second",
+    title: "Edition Test Blog",
+    type: "blog",
+    date: "2026-04-04",
+    edition: "2nd edition",
+    abstract: "Latest blog edition. This should be the only version shown on the Blog section page.",
+    body: `
+      <p>This is the second and latest blog edition.</p>
+    `
+  },
+  {
+    slug: "same_title_essay",
+    title: "Same Title across Different Sections",
+    type: "essays",
+    date: "2026-07-01",
+    edition: "1st edition",
+    abstract: "Essay version of a title also used in another section.",
+    body: `
+      <p>This checks that duplicate-title filtering is separated by section type.</p>
+    `
+  },
+  {
+    slug: "same_title_guide",
+    title: "Same Title across Different Sections",
+    type: "guides",
+    date: "2026-07-02",
+    edition: "1st edition",
+    abstract: "Guide version of a title also used in another section.",
+    body: `
+      <p>This should not hide the essay version, because it belongs to Guides.</p>
+    `
+  },
+  {
+    slug: "latest_top_three_test",
+    title: "Latest Top Three Test",
+    type: "blog",
+    date: "2027-01-01",
+    edition: "1st edition",
+    abstract: "Very new test post. This should appear in the homepage Latest top three.",
+    body: `
+      <p>This tests whether the homepage only shows the three newest posts.</p>
+    `
+  }
 ];
