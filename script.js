@@ -7,15 +7,6 @@ function post_card(item) {
   return `
     <article class="card">
       <small>${item.date} · ${labels[item.type]} · ${item.edition}</small>
-      <h3><a href="${post_link(item)}">${item.title}</a></h3>const labels = { essays: "Essays", guides: "Guides", blog: "Blog" };
-const params = new URLSearchParams(location.search);
-const by_date = items => [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
-const post_link = item => `post.html?p=${item.slug}`;
-
-function post_card(item) {
-  return `
-    <article class="card">
-      <small>${item.date} · ${labels[item.type]} · ${item.edition}</small>
       <h3><a href="${post_link(item)}">${item.title}</a></h3>
       <p>${item.abstract}</p>
     </article>`;
@@ -54,111 +45,6 @@ function load_sidebar() {
 
       <div class="side_group">
         <p>&gt;&gt; Blog</p>
-        ${post_links("blog")}
-      </div>
-    </details>
-
-    <footer>anodyne avenue ©</footer>`;
-}
-
-function load_home() {
-  const latest_el = document.getElementById("latest");
-  if (!latest_el) return;
-  latest_el.innerHTML = by_date(posts).slice(0, 5).map(post_card).join("");
-}
-
-function load_section() {
-  const section_el = document.getElementById("section_posts");
-  const title_el = document.getElementById("section_title");
-  if (!section_el || !title_el) return;
-
-  const type = params.get("s") || "essays";
-  title_el.textContent = labels[type] || "Essays";
-  section_el.innerHTML = by_date(posts.filter(item => item.type == type)).map(post_card).join("");
-}
-
-function load_post() {
-  const post_el = document.getElementById("post");
-  if (!post_el) return;
-
-  const item = posts.find(post => post.slug == params.get("p")) || posts[0];
-
-  post_el.innerHTML = `
-    <p class="kicker">${labels[item.type]}</p>
-    <small>${item.date} · ${item.edition}</small>
-    <h1>${item.title}</h1>
-    <p class="abstract"><b>Abstract.</b> ${item.abstract}</p>
-    ${item.body}
-    <footer>anodyne avenue ©</footer>`;
-}
-
-function mobile_screen() {
-  return matchMedia("(max-width: 760px)").matches;
-}
-
-function toggle_sidebar() {
-  document.body.classList.toggle(mobile_screen() ? "side_open" : "side_closed");
-}
-
-function close_mobile_sidebar(event) {
-  if (!mobile_screen()) return;
-  if (!document.body.classList.contains("side_open")) return;
-  if (event.target.closest("#sidebar") || event.target.closest("#toggle")) return;
-  document.body.classList.remove("side_open");
-}
-
-function go_back() {
-  history.length > 1 ? history.back() : location.href = "index.html";
-}
-
-document.getElementById("toggle").onclick = toggle_sidebar;
-document.addEventListener("click", close_mobile_sidebar);
-document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
-
-load_sidebar();
-load_home();
-load_section();
-load_post();
-      <p>${item.abstract}</p>
-    </article>`;
-}
-
-function post_links(type) {
-  return by_date(posts.filter(item => item.type == type)).map(item => `
-    <a href="${post_link(item)}" title="${item.title}">${item.title}</a>
-  `).join("");
-}
-
-function load_sidebar() {
-  const sidebar_el = document.getElementById("sidebar");
-
-  sidebar_el.innerHTML = `
-    <div class="side_top">
-      <a class="title" href="index.html">anodyne avenue</a>
-      <button id="side_close" aria-label="close sidebar">×</button>
-    </div>
-
-    <nav>
-      <a href="section.html?s=essays">Essays</a>
-      <a href="section.html?s=guides">Guides</a>
-      <a href="section.html?s=blog">Blog</a>
-    </nav>
-
-    <details class="side_index">
-      <summary>Index</summary>
-
-      <div class="side_group">
-        <p>Essays</p>
-        ${post_links("essays")}
-      </div>
-
-      <div class="side_group">
-        <p>Guides</p>
-        ${post_links("guides")}
-      </div>
-
-      <div class="side_group">
-        <p>Blog</p>
         ${post_links("blog")}
       </div>
     </details>
@@ -250,9 +136,5 @@ check_sidebar_size();
 document.getElementById("toggle").onclick = toggle_sidebar;
 document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
 
-document.addEventListener("click", event => {
-  if (event.target.closest("#side_close")) close_sidebar();
-  close_mobile_sidebar(event);
-});
-
+document.addEventListener("click", close_mobile_sidebar);
 addEventListener("resize", check_sidebar_size);
