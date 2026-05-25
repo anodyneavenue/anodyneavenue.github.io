@@ -537,6 +537,18 @@ const posts = [
     title: "Latest Top Three Test",
     type: "blog",
     date: "2027-01-01",
+    edition: "2nd edition",
+    abstract: "Very new test post. This should appear in the homepage Latest top three.",
+    body: `
+      <p>This tests whether the homepage only shows the three newest posts.</p>
+    `
+  }
+  ,
+  {
+    slug: "latest_top_three_test",
+    title: "Latest Top Three Test",
+    type: "blog",
+    date: "2026-12-01",
     edition: "1st edition",
     abstract: "Very new test post. This should appear in the homepage Latest top three.",
     body: `
