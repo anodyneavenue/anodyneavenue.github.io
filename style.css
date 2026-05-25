@@ -41,6 +41,7 @@ a:hover {
 h3 a:hover,
 .title:hover,
 nav a:hover,
+.side_index summary:hover,
 .side_group a:hover,
 .grid a:hover {
   text-decoration: underline;
