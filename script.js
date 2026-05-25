@@ -30,7 +30,7 @@ function load_sidebar() {
       <a href="section.html?s=blog">Blog</a>
     </nav>
 
-    <details class="side_index" open>
+    <details class="side_index">
       <summary>Index</summary>
 
       <div class="side_group">
@@ -88,11 +88,19 @@ function toggle_sidebar() {
   document.body.classList.toggle(mobile ? "side_open" : "side_closed");
 }
 
+function close_mobile_sidebar(event) {
+  const mobile = matchMedia("(max-width: 760px)").matches;
+  if (!mobile || !document.body.classList.contains("side_open")) return;
+  if (event.target.closest("#sidebar") || event.target.closest("#toggle")) return;
+  document.body.classList.remove("side_open");
+}
+
 function go_back() {
   history.length > 1 ? history.back() : location.href = "index.html";
 }
 
 document.getElementById("toggle").onclick = toggle_sidebar;
+document.addEventListener("click", close_mobile_sidebar);
 document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
 
 load_sidebar();
