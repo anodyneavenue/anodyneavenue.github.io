@@ -8,6 +8,10 @@
   --read: 46rem;
 }
 
+html {
+  color-scheme: light dark;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #080808;
