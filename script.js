@@ -1,7 +1,24 @@
 const labels = { essays: "Essays", guides: "Guides", blog: "Blog" };
+const intros = {
+  essays: "Long-form arguments, investigations, and attempts to look at a topic from more than one side.",
+  guides: "Structured explanations, methods, and practical notes.",
+  blog: "Shorter entries, fragments, logs, and irregular updates."
+};
+
 const params = new URLSearchParams(location.search);
 const by_date = items => [...items].sort((a, b) => new Date(b.date) - new Date(a.date));
 const post_link = item => `post.html?p=${item.slug}`;
+
+function latest_by_title(items) {
+  const latest = new Map();
+
+  by_date(items).forEach(item => {
+    const key = `${item.type}:${item.title.toLowerCase()}`;
+    if (!latest.has(key)) latest.set(key, item);
+  });
+
+  return [...latest.values()];
+}
 
 function post_card(item) {
   return `
@@ -37,11 +54,16 @@ function load_home() {
 function load_section() {
   const section_el = document.getElementById("section_posts");
   const title_el = document.getElementById("section_title");
+  const intro_el = document.getElementById("section_intro");
   if (!section_el || !title_el) return;
 
   const type = params.get("s") || "essays";
+  const items = posts.filter(item => item.type == type);
+
   title_el.textContent = labels[type] || "Essays";
-  section_el.innerHTML = by_date(posts.filter(item => item.type == type)).map(post_card).join("");
+  if (intro_el) intro_el.textContent = intros[type] || "";
+
+  section_el.innerHTML = latest_by_title(items).map(post_card).join("");
 }
 
 function load_archive() {
