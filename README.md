@@ -36,9 +36,9 @@ Add a new object inside the `posts` array in `posts.js`:
   date: "2026-05-25",
   edition: "1st edition",
   abstract: "Short abstract here.",
-  body: `
+  body: '
     <p>Post body here.</p>
-  `
+  '
 }
 ```
 
