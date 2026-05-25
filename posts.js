@@ -6,7 +6,6 @@ const posts = [
     date: "2026-05-25",
     edition: "1st edition",
     abstract: "A placeholder essay about uncertainty, interpretation, and looking at more than one side.",
-    tags: ["epistemology", "ambiguity", "method"],
     body: `
       <p>Replace this with the essay.</p>
       <h2>Opening position</h2>
@@ -24,7 +23,6 @@ const posts = [
     date: "2026-05-20",
     edition: "1st edition",
     abstract: "A guide for separating claims, assumptions, definitions, incentives, and evidence.",
-    tags: ["thinking", "method", "reading"],
     body: `
       <p>Replace this with the guide.</p>
       <h2>1. Separate claim from mood</h2>
@@ -40,7 +38,6 @@ const posts = [
     date: "2026-05-18",
     edition: "1st edition",
     abstract: "A short opening note for the archive.",
-    tags: ["site", "notes"],
     body: `
       <p>The site is anonymous, text-first, and minimal.</p>
     `
