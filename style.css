@@ -42,8 +42,7 @@ h3 a:hover,
 .title:hover,
 nav a:hover,
 .side_index summary:hover,
-.side_group a:hover,
-.grid a:hover {
+.side_group a:hover {
   text-decoration: underline;
 }
 
@@ -81,13 +80,8 @@ nav a:hover,
 
 main {
   max-width: 46rem;
-  margin-left: calc(var(--side) + 5vw);
+  margin: 0 auto;
   padding: 5rem 1.2rem;
-}
-
-.side_closed main {
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .title {
@@ -97,28 +91,21 @@ main {
   text-transform: lowercase;
 }
 
-nav,
-.side_group {
+nav {
   display: grid;
   gap: .15rem;
-  margin-bottom: .9rem;
+  margin-bottom: .15rem;
 }
 
 .side_index {
-  margin-top: .9rem;
+  margin: 0 0 .9rem;
 }
 
 nav a,
-.side_group a,
 .side_index summary {
   display: block;
   padding: .3rem .45rem;
   border-radius: .35rem;
-  font-size: .92rem;
-}
-
-.side_index summary {
-  cursor: pointer;
   color: var(--muted);
   font-size: .75rem;
   font-weight: 700;
@@ -126,11 +113,21 @@ nav a,
   text-transform: uppercase;
 }
 
+.side_index summary {
+  cursor: pointer;
+}
+
 nav a:hover,
-.side_group a:hover,
-.side_index summary:hover {
+.side_index summary:hover,
+.side_group a:hover {
   background: var(--line);
   text-decoration: none;
+}
+
+.side_group {
+  display: grid;
+  gap: .15rem;
+  margin-bottom: .9rem;
 }
 
 .side_group p {
@@ -141,6 +138,13 @@ nav a:hover,
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
+}
+
+.side_group a {
+  display: block;
+  padding: .3rem .45rem;
+  border-radius: .35rem;
+  font-size: .92rem;
 }
 
 h1 {
@@ -183,7 +187,10 @@ footer {
 }
 
 .back {
-  margin-bottom: 2rem;
+  position: fixed;
+  top: .8rem;
+  left: calc(var(--side) + .8rem);
+  z-index: 2;
   width: 2.2rem;
   height: 2.2rem;
   border: 1px solid var(--line);
@@ -195,24 +202,12 @@ footer {
   cursor: pointer;
 }
 
+.side_closed .back {
+  left: .8rem;
+}
+
 .back:hover {
   background: var(--panel);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: .7rem;
-}
-
-.grid a {
-  display: grid;
-  place-items: center;
-  min-height: 4rem;
-  border: 1px solid var(--line);
-  border-radius: .6rem;
-  padding: 1rem;
-  text-align: center;
 }
 
 #sidebar footer {
@@ -230,13 +225,7 @@ footer {
     transform: translateX(0);
   }
 
-  main,
-  .side_closed main {
-    margin: 0 auto;
-    padding-top: 4rem;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
+  .back {
+    left: 3.4rem;
   }
 }
