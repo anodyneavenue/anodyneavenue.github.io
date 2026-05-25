@@ -22,7 +22,7 @@ function load_sidebar() {
   const sidebar_el = document.getElementById("sidebar");
 
   sidebar_el.innerHTML = `
-    <a class="title" href="index.html">Anodyne Avenue</a>
+    <a class="title" href="index.html">anodyne avenue</a>
 
     <nav>
       <a href="section.html?s=essays">Essays</a>
@@ -45,7 +45,7 @@ function load_sidebar() {
       ${post_links("blog")}
     </div>
 
-    <footer>Anodyne Avenue ©</footer>`;
+    <footer>anodyne avenue ©</footer>`;
 }
 
 function load_home() {
@@ -76,7 +76,7 @@ function load_post() {
     <h1>${item.title}</h1>
     <p class="abstract"><b>Abstract.</b> ${item.abstract}</p>
     ${item.body}
-    <footer>Anodyne Avenue ©</footer>`;
+    <footer>anodyne avenue ©</footer>`;
 }
 
 function toggle_sidebar() {
