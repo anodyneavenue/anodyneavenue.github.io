@@ -14,7 +14,7 @@ function post_card(item) {
 
 function post_links(type) {
   return by_date(posts.filter(item => item.type == type)).map(item => `
-    <a href="${post_link(item)}">${item.title}</a>
+    <a href="${post_link(item)}" title="${item.title}">${item.title}</a>
   `).join("");
 }
 
@@ -22,7 +22,10 @@ function load_sidebar() {
   const sidebar_el = document.getElementById("sidebar");
 
   sidebar_el.innerHTML = `
-    <a class="title" href="index.html">anodyne avenue</a>
+    <div class="side_top">
+      <a class="title" href="index.html">anodyne avenue</a>
+      <button id="side_close" aria-label="close sidebar">×</button>
+    </div>
 
     <nav>
       <a href="section.html?s=essays">Essays</a>
@@ -83,27 +86,62 @@ function load_post() {
     <footer>anodyne avenue ©</footer>`;
 }
 
+function mobile_screen() {
+  return matchMedia("(max-width: 760px)").matches;
+}
+
+function sidebar_width() {
+  return document.getElementById("sidebar").getBoundingClientRect().width;
+}
+
+function sidebar_fits() {
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return innerWidth - sidebar_width() >= 34 * rem;
+}
+
+function close_sidebar() {
+  document.body.classList.add("side_closed");
+  document.body.classList.remove("side_open");
+}
+
 function toggle_sidebar() {
-  const mobile = matchMedia("(max-width: 760px)").matches;
-  document.body.classList.toggle(mobile ? "side_open" : "side_closed");
+  if (mobile_screen()) {
+    document.body.classList.toggle("side_open");
+    return;
+  }
+
+  if (document.body.classList.contains("side_closed") && !sidebar_fits()) return;
+  document.body.classList.toggle("side_closed");
 }
 
 function close_mobile_sidebar(event) {
-  const mobile = matchMedia("(max-width: 760px)").matches;
-  if (!mobile || !document.body.classList.contains("side_open")) return;
+  if (!mobile_screen()) return;
+  if (!document.body.classList.contains("side_open")) return;
   if (event.target.closest("#sidebar") || event.target.closest("#toggle")) return;
   document.body.classList.remove("side_open");
+}
+
+function check_sidebar_size() {
+  if (mobile_screen()) return;
+  if (!sidebar_fits()) close_sidebar();
 }
 
 function go_back() {
   history.length > 1 ? history.back() : location.href = "index.html";
 }
 
-document.getElementById("toggle").onclick = toggle_sidebar;
-document.addEventListener("click", close_mobile_sidebar);
-document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
-
 load_sidebar();
 load_home();
 load_section();
 load_post();
+check_sidebar_size();
+
+document.getElementById("toggle").onclick = toggle_sidebar;
+document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
+
+document.addEventListener("click", event => {
+  if (event.target.closest("#side_close")) close_sidebar();
+  close_mobile_sidebar(event);
+});
+
+addEventListener("resize", check_sidebar_size);
