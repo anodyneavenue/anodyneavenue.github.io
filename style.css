@@ -41,7 +41,7 @@ a:hover {
 h3 a:hover,
 .title:hover,
 nav a:hover,
-details a:hover,
+.side_group a:hover,
 .grid a:hover {
   text-decoration: underline;
 }
@@ -54,8 +54,10 @@ details a:hover,
   width: 2.2rem;
   height: 2.2rem;
   border: 1px solid var(--line);
+  border-radius: .35rem;
   background: var(--bg);
   color: var(--fg);
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -87,20 +89,20 @@ main {
 
 .title {
   display: block;
-  margin-bottom: 1.2rem;
+  margin: .25rem 0 1.2rem 2.8rem;
   font-weight: 700;
   text-transform: lowercase;
 }
 
 nav,
-details {
+.side_group {
   display: grid;
   gap: .15rem;
-  margin-bottom: .8rem;
+  margin-bottom: .9rem;
 }
 
 nav a,
-details a {
+.side_group a {
   display: block;
   padding: .3rem .45rem;
   border-radius: .35rem;
@@ -108,13 +110,13 @@ details a {
 }
 
 nav a:hover,
-details a:hover {
+.side_group a:hover {
   background: var(--line);
   text-decoration: none;
 }
 
-summary {
-  cursor: pointer;
+.side_group p {
+  margin: 0;
   padding: .3rem .45rem;
   color: var(--muted);
   font-size: .75rem;
@@ -164,12 +166,14 @@ footer {
 
 .back {
   margin-bottom: 2rem;
-  padding: .35rem .6rem;
+  width: 2.2rem;
+  height: 2.2rem;
   border: 1px solid var(--line);
   border-radius: .35rem;
   background: var(--bg);
   color: var(--fg);
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -187,6 +191,12 @@ footer {
   border: 1px solid var(--line);
   border-radius: .6rem;
   padding: 1rem;
+}
+
+#sidebar footer {
+  margin-top: 2rem;
+  padding: .3rem .45rem;
+  font-size: .82rem;
 }
 
 @media (max-width: 760px) {
