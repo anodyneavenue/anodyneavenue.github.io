@@ -5,7 +5,6 @@
   --line: #e5e5e5;
   --panel: #f7f7f7;
   --side: 13rem;
-  --read: 46rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,7 +50,7 @@ nav a:hover,
   position: fixed;
   top: .8rem;
   left: .8rem;
-  z-index: 20;
+  z-index: 40;
   width: 2.2rem;
   height: 2.2rem;
   border: 1px solid var(--line);
@@ -81,29 +80,20 @@ nav a:hover,
 }
 
 main {
-  position: relative;
-  z-index: 1;
-  width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
-  margin-left: max(calc(var(--side) + 1.2rem), calc((100vw - var(--read)) / 2));
-  padding: 5rem 0;
-  transition: width .18s, margin .18s;
+  max-width: 46rem;
+  margin-left: calc(var(--side) + 5vw);
+  padding: 5rem 1.2rem;
 }
 
 .side_closed main {
-  width: min(var(--read), calc(100vw - 2.4rem));
-  margin: 0 auto;
-}
-
-.side_top {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  margin-bottom: 1.2rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .title {
+  display: block;
   min-width: 0;
-  flex: 1;
+  margin: .25rem 0 1.2rem 2.8rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -111,23 +101,14 @@ main {
   text-transform: lowercase;
 }
 
-#side_close {
-  flex: 0 0 auto;
-  width: 2.2rem;
-  height: 2.2rem;
-  border: 1px solid var(--line);
-  border-radius: .35rem;
-  background: var(--bg);
-  color: var(--fg);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 nav {
   display: grid;
   gap: .15rem;
   margin-bottom: .15rem;
+}
+
+.side_index {
+  margin: 0 0 .9rem;
 }
 
 nav a,
@@ -143,10 +124,6 @@ nav a,
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
-}
-
-.side_index {
-  margin: 0 0 .9rem;
 }
 
 .side_index summary {
@@ -172,8 +149,6 @@ nav a:hover,
   color: var(--muted);
   font-size: .82rem;
   font-weight: 400;
-  text-decoration: underline;
-  text-underline-offset: .25em;
 }
 
 .side_group a {
@@ -229,7 +204,7 @@ footer {
   position: fixed;
   top: .8rem;
   left: calc(var(--side) + .8rem);
-  z-index: 20;
+  z-index: 40;
   width: 2.2rem;
   height: 2.2rem;
   border: 1px solid var(--line);
@@ -246,7 +221,7 @@ footer {
 }
 
 .back:hover,
-#side_close:hover {
+#toggle:hover {
   background: var(--panel);
 }
 
@@ -270,7 +245,6 @@ footer {
 
   main,
   .side_closed main {
-    width: min(var(--read), calc(100vw - 2.4rem));
     margin: 0 auto;
     padding-top: 4rem;
   }
