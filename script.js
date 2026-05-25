@@ -5,12 +5,11 @@ const post_link = item => `post.html?p=${item.slug}`;
 
 function post_card(item) {
   return `
-    <a class="card" href="${post_link(item)}">
+    <article class="card">
       <small>${item.date} · ${labels[item.type]} · ${item.edition}</small>
-      <h3>${item.title}</h3>
+      <h3><a href="${post_link(item)}">${item.title}</a></h3>
       <p>${item.abstract}</p>
-      <p class="tags">${item.tags.map(tag => `<span>${tag}</span>`).join("")}</p>
-    </a>`;
+    </article>`;
 }
 
 function load_sidebar() {
@@ -61,7 +60,6 @@ function load_post() {
     <small>${item.date} · ${item.edition}</small>
     <h1>${item.title}</h1>
     <p class="abstract"><b>Abstract.</b> ${item.abstract}</p>
-    <p class="tags">${item.tags.map(tag => `<span>${tag}</span>`).join("")}</p>
     ${item.body}
     <footer>© Anodyne Avenue. All rights reserved.</footer>`;
 }
@@ -71,7 +69,12 @@ function toggle_sidebar() {
   document.body.classList.toggle(mobile ? "side_open" : "side_closed");
 }
 
+function go_back() {
+  history.length > 1 ? history.back() : location.href = "index.html";
+}
+
 document.getElementById("toggle").onclick = toggle_sidebar;
+document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
 
 load_sidebar();
 load_home();
