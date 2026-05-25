@@ -5,6 +5,7 @@
   --line: #e5e5e5;
   --panel: #f7f7f7;
   --side: 13rem;
+  --read: 46rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -80,14 +81,17 @@ nav a:hover,
 }
 
 main {
-  max-width: 46rem;
-  margin-left: calc(var(--side) + 5vw);
-  padding: 5rem 1.2rem;
+  position: relative;
+  z-index: 1;
+  width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
+  margin-left: max(calc(var(--side) + 1.2rem), calc((100vw - var(--read)) / 2));
+  padding: 5rem 0;
+  transition: width .18s, margin .18s;
 }
 
 .side_closed main {
-  margin-left: auto;
-  margin-right: auto;
+  width: min(var(--read), calc(100vw - 2.4rem));
+  margin: 0 auto;
 }
 
 .title {
@@ -245,6 +249,7 @@ footer {
 
   main,
   .side_closed main {
+    width: min(var(--read), calc(100vw - 2.4rem));
     margin: 0 auto;
     padding-top: 4rem;
   }
