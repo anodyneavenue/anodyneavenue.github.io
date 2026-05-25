@@ -135,6 +135,5 @@ check_sidebar_size();
 
 document.getElementById("toggle").onclick = toggle_sidebar;
 document.querySelectorAll(".back").forEach(item => item.onclick = go_back);
-
 document.addEventListener("click", close_mobile_sidebar);
 addEventListener("resize", check_sidebar_size);
