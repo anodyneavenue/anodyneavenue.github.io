@@ -1,3 +1,4 @@
-# Pseudonym: Anodyne Avenue
+# Anodyne Avenue
+Pseudonym.
 
-# anodyneavenue.github.io
+anodyneavenue.github.io
