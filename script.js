@@ -22,7 +22,7 @@ function load_sidebar() {
       <a href="section.html?s=essays">Essays</a>
       <a href="section.html?s=guides">Guides</a>
       <a href="section.html?s=blog">Blog</a>
-      <a href="archive.html">Index</a>
+      <a href="archive.html">Archive</a>
     </nav>
 
     <footer>anodyne avenue ©</footer>`;
