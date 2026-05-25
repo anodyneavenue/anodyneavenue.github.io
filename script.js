@@ -12,25 +12,40 @@ function post_card(item) {
     </article>`;
 }
 
+function post_links(type) {
+  return by_date(posts.filter(item => item.type == type)).map(item => `
+    <a href="${post_link(item)}">${item.title}</a>
+  `).join("");
+}
+
 function load_sidebar() {
   const sidebar_el = document.getElementById("sidebar");
 
   sidebar_el.innerHTML = `
     <a class="title" href="index.html">Anodyne Avenue</a>
+
     <nav>
       <a href="section.html?s=essays">Essays</a>
       <a href="section.html?s=guides">Guides</a>
       <a href="section.html?s=blog">Blog</a>
     </nav>
-    ${Object.keys(labels).map(type => `
-      <details open>
-        <summary>${labels[type]}</summary>
-        ${by_date(posts.filter(item => item.type == type)).map(item => `
-          <a href="${post_link(item)}">${item.title}</a>
-        `).join("")}
-      </details>
-    `).join("")}
-    <footer>© Anodyne Avenue</footer>`;
+
+    <div class="side_group">
+      <p>Essays</p>
+      ${post_links("essays")}
+    </div>
+
+    <div class="side_group">
+      <p>Guides</p>
+      ${post_links("guides")}
+    </div>
+
+    <div class="side_group">
+      <p>Blog</p>
+      ${post_links("blog")}
+    </div>
+
+    <footer>Anodyne Avenue ©</footer>`;
 }
 
 function load_home() {
@@ -61,7 +76,7 @@ function load_post() {
     <h1>${item.title}</h1>
     <p class="abstract"><b>Abstract.</b> ${item.abstract}</p>
     ${item.body}
-    <footer>© Anodyne Avenue. All rights reserved.</footer>`;
+    <footer>Anodyne Avenue ©</footer>`;
 }
 
 function toggle_sidebar() {
