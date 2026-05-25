@@ -30,20 +30,24 @@ function load_sidebar() {
       <a href="section.html?s=blog">Blog</a>
     </nav>
 
-    <div class="side_group">
-      <p>Essays</p>
-      ${post_links("essays")}
-    </div>
+    <details class="side_index" open>
+      <summary>Index</summary>
 
-    <div class="side_group">
-      <p>Guides</p>
-      ${post_links("guides")}
-    </div>
+      <div class="side_group">
+        <p>Essays</p>
+        ${post_links("essays")}
+      </div>
 
-    <div class="side_group">
-      <p>Blog</p>
-      ${post_links("blog")}
-    </div>
+      <div class="side_group">
+        <p>Guides</p>
+        ${post_links("guides")}
+      </div>
+
+      <div class="side_group">
+        <p>Blog</p>
+        ${post_links("blog")}
+      </div>
+    </details>
 
     <footer>anodyne avenue ©</footer>`;
 }
