@@ -12,12 +12,6 @@ function post_card(item) {
     </article>`;
 }
 
-function post_links(type) {
-  return by_date(posts.filter(item => item.type == type)).map(item => `
-    <a href="${post_link(item)}" title="${item.title}">${item.title}</a>
-  `).join("");
-}
-
 function load_sidebar() {
   const sidebar_el = document.getElementById("sidebar");
 
@@ -28,26 +22,8 @@ function load_sidebar() {
       <a href="section.html?s=essays">Essays</a>
       <a href="section.html?s=guides">Guides</a>
       <a href="section.html?s=blog">Blog</a>
+      <a href="archive.html">Index</a>
     </nav>
-
-    <details class="side_index">
-      <summary>Index</summary>
-
-      <div class="side_group">
-        <p>&gt;&gt; Essays</p>
-        ${post_links("essays")}
-      </div>
-
-      <div class="side_group">
-        <p>&gt;&gt; Guides</p>
-        ${post_links("guides")}
-      </div>
-
-      <div class="side_group">
-        <p>&gt;&gt; Blog</p>
-        ${post_links("blog")}
-      </div>
-    </details>
 
     <footer>anodyne avenue ©</footer>`;
 }
@@ -55,7 +31,7 @@ function load_sidebar() {
 function load_home() {
   const latest_el = document.getElementById("latest");
   if (!latest_el) return;
-  latest_el.innerHTML = by_date(posts).slice(0, 5).map(post_card).join("");
+  latest_el.innerHTML = by_date(posts).slice(0, 3).map(post_card).join("");
 }
 
 function load_section() {
@@ -66,6 +42,12 @@ function load_section() {
   const type = params.get("s") || "essays";
   title_el.textContent = labels[type] || "Essays";
   section_el.innerHTML = by_date(posts.filter(item => item.type == type)).map(post_card).join("");
+}
+
+function load_archive() {
+  const archive_el = document.getElementById("archive");
+  if (!archive_el) return;
+  archive_el.innerHTML = by_date(posts).map(post_card).join("");
 }
 
 function load_post() {
@@ -130,6 +112,7 @@ function go_back() {
 load_sidebar();
 load_home();
 load_section();
+load_archive();
 load_post();
 check_sidebar_size();
 
