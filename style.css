@@ -71,6 +71,8 @@ nav a:hover,
   background: var(--panel);
   border-right: 1px solid var(--line);
   transition: transform .18s;
+  display: flex;
+  flex-direction: column;
 }
 
 .side_closed #sidebar {
@@ -102,16 +104,31 @@ nav,
   margin-bottom: .9rem;
 }
 
+.side_index {
+  margin-top: .9rem;
+}
+
 nav a,
-.side_group a {
+.side_group a,
+.side_index summary {
   display: block;
   padding: .3rem .45rem;
   border-radius: .35rem;
   font-size: .92rem;
 }
 
+.side_index summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
 nav a:hover,
-.side_group a:hover {
+.side_group a:hover,
+.side_index summary:hover {
   background: var(--line);
   text-decoration: none;
 }
@@ -189,14 +206,18 @@ footer {
 }
 
 .grid a {
+  display: grid;
+  place-items: center;
+  min-height: 4rem;
   border: 1px solid var(--line);
   border-radius: .6rem;
   padding: 1rem;
+  text-align: center;
 }
 
 #sidebar footer {
-  margin-top: 2rem;
-  padding: .3rem .45rem;
+  margin-top: auto;
+  padding: 2rem .45rem .3rem;
   font-size: .82rem;
 }
 
