@@ -1,57 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-GB">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your Name</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem;
-      line-height: 1.6;
-      color: #111;
-      background: #fafafa;
-    }
-
-    h1 {
-      font-size: 2.4rem;
-      margin-bottom: 0.25rem;
-    }
-
-    h2 {
-      margin-top: 2rem;
-    }
-
-    a {
-      color: #0645ad;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: #555;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anodyne Avenue</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Your Name</h1>
-  <p class="subtitle">Physics undergraduate · Data analyst · Portfolio</p>
+  <button id="toggle">☰</button>
+  <aside id="sidebar"></aside>
 
-  <h2>About</h2>
-  <p>
-    I am building this site to host projects, notes, writing, and technical work.
-  </p>
+  <main>
+    <p class="kicker">Anodyne Avenue</p>
+    <h1>Deep dives into topics of interest, looking at all sides.</h1>
+    <p class="muted">An anonymous, text-first archive of essays, guides, and blog posts.</p>
 
-  <h2>Projects</h2>
-  <ul>
-    <li><a href="#">Project 1</a> — short description.</li>
-    <li><a href="#">Project 2</a> — short description.</li>
-  </ul>
+    <h2>Latest</h2>
+    <div id="latest"></div>
 
-  <h2>Contact</h2>
-  <p>
-    Add a professional contact method here, or link to LinkedIn/GitHub.
-  </p>
+    <h2>Sections</h2>
+    <div class="grid">
+      <a href="section.html?s=essays">Essays</a>
+      <a href="section.html?s=guides">Guides</a>
+      <a href="section.html?s=blog">Blog</a>
+    </div>
+  </main>
+
+  <script src="posts.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
