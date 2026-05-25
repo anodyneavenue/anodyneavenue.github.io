@@ -4,7 +4,7 @@
   --muted: #666;
   --line: #e5e5e5;
   --panel: #f7f7f7;
-  --side: 18rem;
+  --side: 15rem;
 }
 
 @media (prefers-color-scheme: dark) {
