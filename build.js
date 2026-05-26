@@ -25,6 +25,39 @@ function escape_html(value) {
     .replaceAll('"', "&quot;");
 }
 
+function strip_html(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function word_count(item) {
+  const text = [
+    item.title,
+    item.abstract,
+    strip_html(item.body)
+  ].join(" ");
+
+  const words = text.match(/\b[\w’'-]+\b/g);
+
+  if (!words) {
+    return 0;
+  }
+
+  return words.length;
+}
+
+function word_count_label(item) {
+  const count = word_count(item);
+
+  if (count === 1) {
+    return "1 word";
+  }
+
+  return count + " words";
+}
+
 function sort_by_date(items) {
   return [...items].sort(function(a, b) {
     return new Date(b.date) - new Date(a.date);
@@ -70,7 +103,7 @@ function meta(item) {
   const parts = [
     item.date,
     labels[item.type],
-    item.edition
+    word_count_label(item)
   ];
 
   if (item.revised) {
@@ -99,9 +132,11 @@ function tag_links(item) {
 function post_card(item) {
   return [
     '    <article class="card">',
-    "      <small>" + meta(item) + "</small>",
-    '      <h3><a class="post_title" href="/' + post_page(item) + '">' + escape_html(item.title) + "</a></h3>",
-    "      <p>" + escape_html(item.abstract) + "</p>",
+    '      <a class="card_link" href="/' + post_page(item) + '">',
+    "        <small>" + meta(item) + "</small>",
+    '        <h3><span class="post_title">' + escape_html(item.title) + "</span></h3>",
+    "        <p>" + escape_html(item.abstract) + "</p>",
+    "      </a>",
     tag_links(item),
     "    </article>"
   ].join("\n");
@@ -116,8 +151,8 @@ function sidebar() {
     '      <a href="/essays.html">Essays</a>',
     '      <a href="/guides.html">Guides</a>',
     '      <a href="/blog.html">Blog</a>',
-    '      <a href="/archive.html">Archive</a>',
     '      <a href="/tags.html">Tags</a>',
+    '      <a href="/archive.html">Archive</a>',
     "    </nav>",
     "",
     "    <footer>anodyne avenue ©</footer>",
