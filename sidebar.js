@@ -67,7 +67,7 @@ function go_back() {
     return;
   }
 
-  location.href = "/index.html";
+  location.href = "/";
 }
 
 document.getElementById("toggle")?.addEventListener("click", toggle_sidebar);
