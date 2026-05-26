@@ -154,6 +154,8 @@ function minimap(headings) {
   }
 
   return [
+    '    <section class="sidebar_minimap" aria-label="On this page">',
+    '      <p class="sidebar_section_title">On this page</p>',
     '      <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading) {
       return [
@@ -163,7 +165,8 @@ function minimap(headings) {
         "        </a>"
       ].join("\n");
     }).join("\n"),
-    "      </nav>"
+    "      </nav>",
+    "    </section>"
   ].join("\n");
 }
 
@@ -222,12 +225,12 @@ function post_card(item) {
   ].join("\n");
 }
 
-function sidebar() {
+function sidebar(extra_html) {
   return [
     '  <aside id="sidebar">',
     '    <a class="title" href="/">anodyne avenue</a>',
     "",
-    "    <nav>",
+    '    <nav class="sidebar_nav" aria-label="Main sections">',
     '      <a href="/essays.html">Essays</a>',
     '      <a href="/guides.html">Guides</a>',
     '      <a href="/blog.html">Blog</a>',
@@ -235,9 +238,13 @@ function sidebar() {
     '      <a href="/archive.html">Archive</a>',
     "    </nav>",
     "",
+    extra_html || "",
+    "",
     "    <footer>anodyne avenue ©</footer>",
     "  </aside>"
-  ].join("\n");
+  ].filter(function(line) {
+    return line !== "";
+  }).join("\n");
 }
 
 function shell(options) {
@@ -264,9 +271,7 @@ function shell(options) {
     '  <button id="toggle" type="button" aria-label="Toggle sidebar">☰</button>',
     back ? '  <button class="back" type="button" aria-label="Back">←</button>' : "",
     "",
-    sidebar(),
-    "",
-    minimap_html,
+    sidebar(minimap_html),
     "",
     "  <main>",
     content,

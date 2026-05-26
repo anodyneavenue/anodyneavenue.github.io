@@ -14,17 +14,15 @@
   <button class="back" type="button" aria-label="Back">←</button>
   <aside id="sidebar">
     <a class="title" href="/">anodyne avenue</a>
-
-    <nav>
+    <nav class="sidebar_nav" aria-label="Main sections">
       <a href="/essays.html">Essays</a>
       <a href="/guides.html">Guides</a>
       <a href="/blog.html">Blog</a>
       <a href="/tags.html">Tags</a>
       <a href="/archive.html">Archive</a>
     </nav>
-
-    <footer>anodyne avenue ©</footer>
-  </aside>
+    <section class="sidebar_minimap" aria-label="On this page">
+      <p class="sidebar_section_title">On this page</p>
       <nav class="minimap" aria-label="Post sections">
         <a class="minimap_item minimap_h2" href="#first_vardolian_section">
           <span class="minimap_dot"></span>
@@ -59,6 +57,9 @@
           <span class="minimap_text">Sixth nembular section</span>
         </a>
       </nav>
+    </section>
+    <footer>anodyne avenue ©</footer>
+  </aside>
   <main>
       <article class="post">
         <p class="kicker">Blog</p>

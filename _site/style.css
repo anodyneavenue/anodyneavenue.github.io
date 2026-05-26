@@ -115,13 +115,13 @@ p {
   text-decoration: underline;
 }
 
-nav {
+.sidebar_nav {
   display: grid;
   gap: .15rem;
   margin-bottom: .15rem;
 }
 
-nav a {
+.sidebar_nav a {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -135,7 +135,7 @@ nav a {
   text-transform: uppercase;
 }
 
-nav a:hover {
+.sidebar_nav a:hover {
   background: var(--line);
   text-decoration: none;
 }
@@ -301,41 +301,80 @@ main > .muted {
   font-size: .82rem;
 }
 
+.sidebar_minimap {
+  min-height: 0;
+  margin-top: 1rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line);
+}
+
+.sidebar_section_title {
+  margin: 0 0 .45rem;
+  padding: 0 .45rem;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
 .minimap {
-  position: fixed;
-  top: 5rem;
-  right: 1.2rem;
-  z-index: 20;
-  width: 10rem;
-  max-height: calc(100vh - 10rem);
-  overflow: hidden;
-  padding: .35rem;
+  --progress: 0;
+
+  position: relative;
+  max-height: min(42vh, 24rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  margin: 0;
+  padding: .2rem 0 .2rem .55rem;
   border-left: 1px solid var(--line);
+
   display: grid;
-  gap: .12rem;
+  gap: .1rem;
+
+  scrollbar-width: thin;
+}
+
+.minimap::before {
+  content: "";
+  position: absolute;
+  top: .2rem;
+  left: -1px;
+  width: 1px;
+  height: calc((100% - .4rem) * var(--progress));
+  background: var(--fg);
+  opacity: .55;
 }
 
 .minimap_item {
   display: grid;
-  grid-template-columns: .55rem 1fr;
+  grid-template-columns: .45rem 1fr;
   align-items: center;
   gap: .35rem;
+
   min-width: 0;
-  padding: .12rem .2rem;
+  padding: .13rem .25rem;
   border-radius: .3rem;
+
   color: var(--muted);
   font-size: .68rem;
-  line-height: 1.2;
+  line-height: 1.25;
+
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .minimap_item:hover {
-  background: var(--panel);
+  background: var(--line);
   color: var(--fg);
+  text-decoration: none;
 }
 
 .minimap_dot {
-  width: .22rem;
-  height: .22rem;
+  width: .2rem;
+  height: .2rem;
   border-radius: 999px;
   background: currentColor;
   opacity: .45;
@@ -348,24 +387,24 @@ main > .muted {
 }
 
 .minimap_h3 {
-  padding-left: .55rem;
+  padding-left: .7rem;
 }
 
 .minimap_h4 {
-  padding-left: 1.1rem;
+  padding-left: 1.4rem;
 }
 
 .minimap_item.active {
   color: var(--fg);
-  background: var(--panel);
+  background: var(--line);
 }
 
 .minimap_item.active .minimap_dot {
   opacity: 1;
 }
 
-@media (max-width: 1180px), (max-height: 620px) {
-  .minimap {
+@media (max-height: 620px) {
+  .sidebar_minimap {
     display: none;
   }
 }
