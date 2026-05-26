@@ -194,8 +194,23 @@ main > .muted {
 
 .card {
   display: block;
-  padding: 1rem 0;
+  padding: 0;
   border-top: 1px solid var(--line);
+}
+
+.card_link {
+  display: block;
+  padding: 1rem;
+  margin: 0 -1rem;
+  border-radius: .45rem;
+}
+
+.card_link:hover {
+  background: var(--panel);
+}
+
+.card_link:hover .post_title {
+  text-decoration: underline;
 }
 
 .card p,
@@ -211,7 +226,7 @@ main > .muted {
   display: flex;
   flex-wrap: wrap;
   gap: .35rem;
-  margin: .8rem 0 0;
+  margin: .8rem 0 1rem;
 }
 
 .tags a {
