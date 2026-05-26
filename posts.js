@@ -1,6 +1,6 @@
 const posts = [
   {
-    show: true,
+    show: false,
     slug: "template",
     title: "Template for a post",
     type: "essays",
@@ -13,7 +13,20 @@ const posts = [
         '<p>This is visible.</p>'
   },
   {
-    show: true,
+    show: false,
+    slug: "template-2",
+    title: "Template for a post",
+    type: "essays",
+    date: "2027-05-24",
+    // revised: "2026-05-26",
+    edition: "2nd edition",
+    tags: ["template"],
+    abstract: "Template",
+    body:
+        '<p>This is visible. A test of editons and how they render</p>'
+  },
+  {
+    show: false,
     slug: "a",
     title: "hello isla",
     type: "essays",
@@ -38,7 +51,7 @@ const posts = [
         '<p>This page will not be built.</p>'
   },
   {
-    show: true,
+    show: false,
     slug: "long_nonsense_test",
     title: "Long Nonsense Test Post",
     type: "blog",

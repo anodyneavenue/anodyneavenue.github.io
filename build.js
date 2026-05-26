@@ -9,9 +9,9 @@ const labels = {
 };
 
 const intros = {
-  essays: "Long-form arguments, investigations, and attempts to look at a topic from more than one side.",
+  essays: "Long-form arguments, investigations, and attempts to look at a topic from multiple perspectives - references included.",
   guides: "Structured explanations, methods, and practical notes.",
-  blog: "Shorter entries, fragments, logs, and irregular updates."
+  blog: "Shorter entries, fragments, logs, public journals, and irregular updates."
 };
 
 const root = __dirname;
@@ -359,13 +359,13 @@ function build_home(items) {
   const latest = sort_by_date(latest_by_title(items)).slice(0, 3);
 
   write_file("index.html", shell({
-    title: "anodyne avenue",
+    title: "anodyne avenue - home",
     description: "An anonymous, text-first archive of essays, guides, and blog posts.",
     back: true,
     content: [
       '      <p class="kicker">anodyne avenue</p>',
-      "      <h1>Deep dives into topics of interest, looking at all sides.</h1>",
-      '      <p class="muted intro">An anonymous, text-first archive of essays, guides, and blog posts.</p>',
+      "      <h1>Deep dives into niche topics of interest.</h1>",
+      '      <p class="muted intro">An anonymous archive of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b> (<b>aa</b>).</p>',
       "",
       "      <h2>Latest</h2>",
       latest.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
@@ -380,7 +380,7 @@ function build_sections(items) {
     }));
 
     write_file(page_for_type(type), shell({
-      title: labels[type].toLowerCase() + " — anodyne avenue",
+      title: labels[type].toLowerCase() + " - anodyne avenue",
       description: intros[type],
       back: true,
       content: [
@@ -396,7 +396,7 @@ function build_sections(items) {
 
 function build_archive(items) {
   write_file("archive.html", shell({
-    title: "archive — anodyne avenue",
+    title: "anodyne avenue - archive",
     description: "All published posts, ordered by date from newest to oldest.",
     back: true,
     content: [
@@ -415,7 +415,7 @@ function build_posts(items) {
     const post_minimap = minimap(prepared.headings);
 
     write_file(post_page(item), shell({
-      title: item.title + " — anodyne avenue",
+      title: "anodyne avenue - " + item.title,
       description: item.abstract,
       back: true,
       minimap: post_minimap,
@@ -446,7 +446,7 @@ function build_tags(items) {
   const tags = all_tags(visible_posts);
 
   write_file("tags.html", shell({
-    title: "tags — anodyne avenue",
+    title: "anodyne avenue - tags",
     description: "Posts grouped by tag.",
     back: true,
     content: [
@@ -469,7 +469,7 @@ function build_tags(items) {
 
   tags.forEach(function(tag) {
     write_file("tag/" + tag.slug + ".html", shell({
-      title: tag.name + " — anodyne avenue",
+      title: "anodyne avenue - " + tag.name,
       description: "Posts tagged " + tag.name + ".",
       back: true,
       content: [
