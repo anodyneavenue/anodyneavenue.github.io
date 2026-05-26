@@ -227,4 +227,46 @@ main > .muted {
   .back {
     left: 3.4rem;
   }
+
+  .post_title:hover {
+  text-decoration: underline;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin: .8rem 0 0;
+}
+
+.tags a {
+  display: inline-block;
+  padding: .12rem .4rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+.tags a:hover {
+  background: var(--panel);
+  text-decoration: none;
+}
+
+.tag_index {
+  display: grid;
+  gap: .5rem;
+}
+
+.tag_index a {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .75rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.tag_index a:hover span {
+  text-decoration: underline;
+}
 }
