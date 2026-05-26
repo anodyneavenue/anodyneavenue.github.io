@@ -1,3 +1,6 @@
+let locked_minimap_id = null;
+let programmatic_scroll = false;
+
 function minimap_items() {
     return Array.from(document.querySelectorAll(".minimap_item"));
 }
@@ -19,6 +22,7 @@ function minimap_pairs() {
             }
 
             return {
+                id: id,
                 item: item,
                 heading: heading
             };
@@ -86,6 +90,19 @@ function keep_active_item_visible(minimap, item) {
     }
 }
 
+function set_active_pair(minimap, pairs, active_pair) {
+    if (!active_pair) {
+        return;
+    }
+
+    pairs.forEach(function(pair) {
+        pair.item.classList.toggle("active", pair === active_pair);
+    });
+
+    minimap.style.setProperty("--progress", document_progress());
+    keep_active_item_visible(minimap, active_pair.item);
+}
+
 function set_active_minimap_item() {
     const minimap = document.querySelector(".minimap");
     const pairs = minimap_pairs();
@@ -94,20 +111,24 @@ function set_active_minimap_item() {
         return;
     }
 
+    if (locked_minimap_id) {
+        const locked_pair = pairs.find(function(pair) {
+            return pair.id === locked_minimap_id;
+        });
+
+        if (locked_pair) {
+            set_active_pair(minimap, pairs, locked_pair);
+            return;
+        }
+    }
+
     const active_index = active_index_from_scroll(pairs);
 
     if (active_index < 0) {
         return;
     }
 
-    const active_pair = pairs[active_index];
-
-    pairs.forEach(function(pair) {
-        pair.item.classList.toggle("active", pair === active_pair);
-    });
-
-    minimap.style.setProperty("--progress", document_progress());
-    keep_active_item_visible(minimap, active_pair.item);
+    set_active_pair(minimap, pairs, pairs[active_index]);
 }
 
 function scroll_to_heading(event) {
@@ -132,6 +153,9 @@ function scroll_to_heading(event) {
 
     event.preventDefault();
 
+    locked_minimap_id = id;
+    programmatic_scroll = true;
+
     minimap_items().forEach(function(other) {
         other.classList.toggle("active", other === item);
     });
@@ -143,9 +167,19 @@ function scroll_to_heading(event) {
 
     history.replaceState(null, "", "#" + encodeURIComponent(id));
 
-    setTimeout(set_active_minimap_item, 250);
-    setTimeout(set_active_minimap_item, 600);
-    setTimeout(set_active_minimap_item, 1000);
+    setTimeout(function() {
+        programmatic_scroll = false;
+        set_active_minimap_item();
+    }, 900);
+}
+
+function unlock_minimap_from_user_scroll() {
+    if (programmatic_scroll) {
+        return;
+    }
+
+    locked_minimap_id = null;
+    request_minimap_update();
 }
 
 let minimap_ticking = false;
@@ -164,7 +198,28 @@ function request_minimap_update() {
 }
 
 document.querySelector(".minimap")?.addEventListener("click", scroll_to_heading);
+
 document.addEventListener("scroll", request_minimap_update, { passive: true });
+
+document.addEventListener("wheel", unlock_minimap_from_user_scroll, { passive: true });
+document.addEventListener("touchmove", unlock_minimap_from_user_scroll, { passive: true });
+
+document.addEventListener("keydown", function(event) {
+    const scroll_keys = [
+        "ArrowUp",
+        "ArrowDown",
+        "PageUp",
+        "PageDown",
+        "Home",
+        "End",
+        " "
+    ];
+
+    if (scroll_keys.includes(event.key)) {
+        unlock_minimap_from_user_scroll();
+    }
+});
+
 addEventListener("resize", request_minimap_update);
 addEventListener("load", set_active_minimap_item);
 
