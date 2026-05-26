@@ -200,9 +200,9 @@ main > .muted {
 
 .card_link {
   display: block;
-  padding: 1rem;
-  margin: 0 -1rem;
-  border-radius: .45rem;
+  padding: .65rem .8rem;
+  margin: 0 -.8rem;
+  border-radius: .4rem;
 }
 
 .card_link:hover {
@@ -213,9 +213,17 @@ main > .muted {
   text-decoration: underline;
 }
 
+.card h3 {
+  margin: .15rem 0 .2rem;
+}
+
 .card p,
 .abstract {
   color: var(--muted);
+}
+
+.card p {
+  margin: 0;
 }
 
 .post_title:hover {
@@ -225,17 +233,17 @@ main > .muted {
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: .35rem;
-  margin: .8rem 0 1rem;
+  gap: .3rem;
+  margin: .45rem 0 .7rem;
 }
 
 .tags a {
   display: inline-block;
-  padding: .12rem .4rem;
+  padding: .1rem .35rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
-  font-size: .75rem;
+  font-size: .72rem;
 }
 
 .tags a:hover {
