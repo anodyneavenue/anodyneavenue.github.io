@@ -153,15 +153,18 @@ function minimap(headings) {
     return "";
   }
 
+  const max_index = Math.max(1, headings.length - 1);
+
   return [
     '    <section class="sidebar_minimap" aria-label="On this page">',
     '      <p class="sidebar_section_title">On this page</p>',
     '      <nav class="minimap" aria-label="Post sections">',
-    headings.map(function(heading) {
+    headings.map(function(heading, index) {
       const marker = "&gt;".repeat(Math.max(1, heading.level - 1));
+      const mix = Math.round((index / max_index) * 100);
 
       return [
-        '        <a class="minimap_item minimap_h' + heading.level + '" href="#' + escape_html(heading.id) + '">',
+        '        <a class="minimap_item minimap_h' + heading.level + '" style="--map-mix: ' + mix + '%;" href="#' + escape_html(heading.id) + '">',
         '          <span class="minimap_marker" aria-hidden="true">' + marker + "</span>",
         '          <span class="minimap_text">' + escape_html(heading.text) + "</span>",
         "        </a>"

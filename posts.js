@@ -7,7 +7,7 @@ const posts = [
     date: "2026-05-24",
     // revised: "2026-05-26",
     edition: "1st edition",
-    // tags: ["template"],
+    tags: ["template"],
     abstract: "Template",
     body:
         '<p>This is visible.</p>'
