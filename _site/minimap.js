@@ -26,9 +26,12 @@ function minimap_pairs() {
         .filter(Boolean);
 }
 
+function page_scroll_max() {
+    return Math.max(0, document.documentElement.scrollHeight - innerHeight);
+}
+
 function document_progress() {
-    const doc = document.documentElement;
-    const max = doc.scrollHeight - innerHeight;
+    const max = page_scroll_max();
 
     if (max <= 0) {
         return 0;
@@ -51,15 +54,15 @@ function keep_active_item_visible(minimap, item) {
     }
 }
 
-function set_active_minimap_item() {
-    const minimap = document.querySelector(".minimap");
-    const pairs = minimap_pairs();
+function active_pair_from_scroll(pairs) {
+    const max = page_scroll_max();
+    const near_bottom = max > 0 && scrollY >= max - 8;
 
-    if (!minimap || !pairs.length) {
-        return;
+    if (near_bottom) {
+        return pairs[pairs.length - 1];
     }
 
-    const marker = scrollY + Math.min(innerHeight * 0.3, 220);
+    const marker = scrollY + 100;
     let active_pair = pairs[0];
 
     pairs.forEach(function(pair) {
@@ -68,12 +71,34 @@ function set_active_minimap_item() {
         }
     });
 
+    return active_pair;
+}
+
+function set_active_pair(active_pair) {
+    const minimap = document.querySelector(".minimap");
+    const pairs = minimap_pairs();
+
+    if (!minimap || !pairs.length || !active_pair) {
+        return;
+    }
+
     pairs.forEach(function(pair) {
-        pair.item.classList.toggle("active", pair === active_pair);
+        pair.item.classList.toggle("active", pair.item === active_pair.item);
     });
 
     minimap.style.setProperty("--progress", document_progress());
     keep_active_item_visible(minimap, active_pair.item);
+}
+
+function set_active_minimap_item() {
+    const minimap = document.querySelector(".minimap");
+    const pairs = minimap_pairs();
+
+    if (!minimap || !pairs.length) {
+        return;
+    }
+
+    set_active_pair(active_pair_from_scroll(pairs));
 }
 
 function scroll_to_heading(event) {
@@ -98,12 +123,23 @@ function scroll_to_heading(event) {
 
     event.preventDefault();
 
+    item.classList.add("active");
+
+    minimap_items().forEach(function(other) {
+        if (other !== item) {
+            other.classList.remove("active");
+        }
+    });
+
     heading.scrollIntoView({
         behavior: "smooth",
         block: "start"
     });
 
     history.replaceState(null, "", "#" + encodeURIComponent(id));
+
+    setTimeout(set_active_minimap_item, 350);
+    setTimeout(set_active_minimap_item, 700);
 }
 
 let minimap_ticking = false;

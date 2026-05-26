@@ -170,7 +170,7 @@ main {
 }
 
 .side_closed .back {
-  left: .8rem;
+  left: 3.4rem;
 }
 
 .kicker,
@@ -327,8 +327,7 @@ main > .muted {
   overflow-x: hidden;
 
   margin: 0;
-  padding: .2rem 0 .2rem .55rem;
-  border-left: 1px solid var(--line);
+  padding: .2rem 0 .2rem .65rem;
 
   display: grid;
   gap: .1rem;
@@ -336,18 +335,36 @@ main > .muted {
   scrollbar-width: thin;
 }
 
+.minimap::after {
+  content: "";
+  position: absolute;
+  top: .25rem;
+  bottom: .25rem;
+  left: .15rem;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+
 .minimap::before {
   content: "";
   position: absolute;
-  top: .2rem;
-  left: -1px;
+  top: .25rem;
+  bottom: .25rem;
+  left: .15rem;
+  z-index: 1;
   width: 1px;
-  height: calc((100% - .4rem) * var(--progress));
   background: var(--fg);
-  opacity: .55;
+  opacity: .8;
+  transform: scaleY(var(--progress));
+  transform-origin: top;
+  pointer-events: none;
 }
 
 .minimap_item {
+  position: relative;
+  z-index: 2;
+
   display: grid;
   grid-template-columns: .45rem 1fr;
   align-items: center;

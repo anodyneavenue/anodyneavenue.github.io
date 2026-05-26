@@ -4,7 +4,7 @@ const posts = [
     slug: "template",
     title: "Template for a post",
     type: "essays",
-    date: "2026-05-26",
+    date: "2026-05-24",
     // revised: "2026-05-26",
     edition: "1st edition",
     // tags: ["template"],
@@ -13,9 +13,9 @@ const posts = [
         '<p>This is visible.</p>'
   },
   {
-    show: false,
+    show: true,
     slug: "a",
-    title: "A",
+    title: "hello isla",
     type: "essays",
     date: "2026-05-25",
     revised: "2026-05-26",
