@@ -15,6 +15,7 @@ const intros = {
 };
 
 const root = __dirname;
+const out = path.join(root, "_site");
 
 function escape_html(value) {
   return String(value || "")
@@ -109,7 +110,7 @@ function post_card(item) {
 function sidebar() {
   return [
     '  <aside id="sidebar">',
-    '    <a class="title" href="/index.html">anodyne avenue</a>',
+    '    <a class="title" href="/">anodyne avenue</a>',
     "",
     "    <nav>",
     '      <a href="/essays.html">Essays</a>',
@@ -158,17 +159,13 @@ function shell(options) {
 }
 
 function write_file(file, content) {
-  const full = path.join(root, file);
+  const full = path.join(out, file);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, content.trimStart(), "utf8");
 }
 
-function remove_path(file) {
-  const full = path.join(root, file);
-
-  if (fs.existsSync(full)) {
-    fs.rmSync(full, { recursive: true, force: true });
-  }
+function copy_file(file) {
+  fs.copyFileSync(path.join(root, file), path.join(out, file));
 }
 
 function validate_posts() {
@@ -237,7 +234,7 @@ function build_home() {
     content: [
       '      <p class="kicker">anodyne avenue</p>',
       "      <h1>Deep dives into topics of interest, looking at all sides.</h1>",
-      '      <p class="muted">An anonymous, text-first archive of essays, guides, and blog posts.</p>',
+      '      <p class="muted intro">An anonymous, text-first archive of essays, guides, and blog posts.</p>',
       "",
       "      <h2>Latest</h2>",
       latest.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
@@ -354,17 +351,22 @@ function build_tags() {
 function build() {
   validate_posts();
 
-  remove_path("posts");
-  remove_path("tag");
-  remove_path("script.js");
-  remove_path("post.html");
-  remove_path("section.html");
+  if (fs.existsSync(out)) {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+
+  fs.mkdirSync(out, { recursive: true });
 
   build_home();
   build_sections();
   build_archive();
   build_tags();
   build_posts();
+
+  copy_file("style.css");
+  copy_file("sidebar.js");
+
+  write_file(".nojekyll", "");
 }
 
 build();
