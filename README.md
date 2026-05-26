@@ -12,19 +12,27 @@ The site is deliberately minimal, quiet, black-and-white, and archive-like.
 
 ## Structure
 
+Source files:
+
 posts.js        post source data
 build.js        static site generator
 sidebar.js      sidebar interaction only
 style.css       visual layout and responsive behaviour
-index.html      generated landing page
-essays.html     generated essays section
-guides.html     generated guides section
-blog.html       generated blog section
-archive.html    generated archive page
-tags.html       generated tags page
-posts/          generated post pages
-tag/            generated tag pages
-README.md       project notes
+package.json    build command
+.github/        GitHub Pages build workflow
+
+Generated site:
+
+_site/index.html
+_site/essays.html
+_site/guides.html
+_site/blog.html
+_site/archive.html
+_site/tags.html
+_site/posts/
+_site/tag/
+
+The generated _site folder is published by GitHub Actions.
 
 ## Sections
 
@@ -38,7 +46,7 @@ Tags
 
 The site is statically generated.
 
-Page content is written directly into the generated HTML files.
+Page content is written directly into generated HTML files.
 
 The browser does not need client-side JavaScript to show posts, sections, archive pages, tag pages, or individual post content.
 
@@ -94,46 +102,24 @@ Tag pages show the latest edition only.
 
 ## Build
 
-After editing posts.js, run:
+GitHub Actions builds the site automatically after a push to main.
+
+The workflow runs:
 
 node build.js
 
-or:
+The generated site is written to:
 
-npm run build
-
-Then commit the generated HTML files.
+_site/
 
 ## Deployment
 
-This is a plain GitHub Pages site.
+GitHub Pages should use:
 
-The generated files are committed directly to the repository.
+Source: GitHub Actions
+
+The published site comes from the generated _site folder.
 
 ## Copyright
 
 anodyne avenue ©
-
-## Commands
-
-Run this locally after adding the files:
-
-node build.js
-
-This generates:
-
-index.html
-essays.html
-guides.html
-blog.html
-archive.html
-tags.html
-posts/a.html
-tag/test.html
-tag/short_form.html
-
-It also removes the old files if present:
-
-script.js
-post.html
-section.html
