@@ -10,6 +10,7 @@
 
 html {
   color-scheme: light dark;
+  scroll-behavior: smooth;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -194,13 +195,36 @@ main > .muted {
 
 .card {
   display: block;
-  padding: 1rem 0;
+  padding: 0;
   border-top: 1px solid var(--line);
+}
+
+.card_link {
+  display: block;
+  padding: .65rem .8rem;
+  margin: 0 -.8rem;
+  border-radius: .4rem;
+}
+
+.card_link:hover {
+  background: var(--panel);
+}
+
+.card_link:hover .post_title {
+  text-decoration: underline;
+}
+
+.card h3 {
+  margin: .15rem 0 .2rem;
 }
 
 .card p,
 .abstract {
   color: var(--muted);
+}
+
+.card p {
+  margin: 0;
 }
 
 .post_title:hover {
@@ -210,17 +234,17 @@ main > .muted {
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: .35rem;
-  margin: .8rem 0 0;
+  gap: .3rem;
+  margin: .45rem 0 .7rem;
 }
 
 .tags a {
   display: inline-block;
-  padding: .12rem .4rem;
+  padding: .1rem .35rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
-  font-size: .75rem;
+  font-size: .72rem;
 }
 
 .tags a:hover {
@@ -249,6 +273,12 @@ main > .muted {
   margin-top: 2rem;
 }
 
+.body h2,
+.body h3,
+.body h4 {
+  scroll-margin-top: 5rem;
+}
+
 .body p,
 .body ul,
 .body ol,
@@ -269,6 +299,75 @@ main > .muted {
   white-space: nowrap;
   padding: 2rem .45rem .3rem;
   font-size: .82rem;
+}
+
+.minimap {
+  position: fixed;
+  top: 5rem;
+  right: 1.2rem;
+  z-index: 20;
+  width: 10rem;
+  max-height: calc(100vh - 10rem);
+  overflow: hidden;
+  padding: .35rem;
+  border-left: 1px solid var(--line);
+  display: grid;
+  gap: .12rem;
+}
+
+.minimap_item {
+  display: grid;
+  grid-template-columns: .55rem 1fr;
+  align-items: center;
+  gap: .35rem;
+  min-width: 0;
+  padding: .12rem .2rem;
+  border-radius: .3rem;
+  color: var(--muted);
+  font-size: .68rem;
+  line-height: 1.2;
+}
+
+.minimap_item:hover {
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.minimap_dot {
+  width: .22rem;
+  height: .22rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: .45;
+}
+
+.minimap_text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.minimap_h3 {
+  padding-left: .55rem;
+}
+
+.minimap_h4 {
+  padding-left: 1.1rem;
+}
+
+.minimap_item.active {
+  color: var(--fg);
+  background: var(--panel);
+}
+
+.minimap_item.active .minimap_dot {
+  opacity: 1;
+}
+
+@media (max-width: 1180px), (max-height: 620px) {
+  .minimap {
+    display: none;
+  }
 }
 
 @media (max-width: 760px) {

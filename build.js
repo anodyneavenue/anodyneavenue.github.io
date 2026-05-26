@@ -17,19 +17,34 @@ const intros = {
 const root = __dirname;
 const out = path.join(root, "_site");
 
+function shown_posts() {
+  return posts.filter(function(item) {
+    return item.show === true;
+  });
+}
+
 function escape_html(value) {
   return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
 }
 
 function strip_html(value) {
   return String(value || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+}
+
+function slug_text(value) {
+  return String(value || "")
+      .toLowerCase()
+      .trim()
+      .replaceAll("&", "and")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
 }
 
 function word_count(item) {
@@ -79,12 +94,77 @@ function latest_by_title(items) {
 }
 
 function tag_slug(tag) {
-  return String(tag)
-    .toLowerCase()
-    .trim()
-    .replaceAll("&", "and")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+  return slug_text(tag);
+}
+
+function heading_slug(text, used) {
+  let base = slug_text(text);
+
+  if (!base) {
+    base = "section";
+  }
+
+  let slug = base;
+  let count = 2;
+
+  while (used.has(slug)) {
+    slug = base + "_" + count;
+    count = count + 1;
+  }
+
+  used.add(slug);
+  return slug;
+}
+
+function prepare_body(body) {
+  const headings = [];
+  const used = new Set();
+
+  const html = String(body || "").replace(/<h([2-4])([^>]*)>(.*?)<\/h\1>/gis, function(match, level, attrs, inner) {
+    const text = strip_html(inner);
+    const existing = attrs.match(/\sid=["']([^"']+)["']/i);
+    const id = existing ? existing[1] : heading_slug(text, used);
+
+    if (existing) {
+      used.add(id);
+    }
+
+    headings.push({
+      level: Number(level),
+      id: id,
+      text: text
+    });
+
+    if (existing) {
+      return match;
+    }
+
+    return "<h" + level + attrs + ' id="' + id + '">' + inner + "</h" + level + ">";
+  });
+
+  return {
+    html: html,
+    headings: headings
+  };
+}
+
+function minimap(headings) {
+  if (!headings || headings.length < 3) {
+    return "";
+  }
+
+  return [
+    '      <nav class="minimap" aria-label="Post sections">',
+    headings.map(function(heading) {
+      return [
+        '        <a class="minimap_item minimap_h' + heading.level + '" href="#' + escape_html(heading.id) + '">',
+        '          <span class="minimap_dot"></span>',
+        '          <span class="minimap_text">' + escape_html(heading.text) + "</span>",
+        "        </a>"
+      ].join("\n");
+    }).join("\n"),
+    "      </nav>"
+  ].join("\n");
 }
 
 function page_for_type(type) {
@@ -165,6 +245,8 @@ function shell(options) {
   const description = options.description || "";
   const back = options.back || false;
   const content = options.content;
+  const minimap_html = options.minimap || "";
+  const minimap_script = minimap_html ? '  <script src="/minimap.js" defer></script>' : "";
 
   return [
     "<!doctype html>",
@@ -176,12 +258,15 @@ function shell(options) {
     description ? '  <meta name="description" content="' + escape_html(description) + '">' : "",
     '  <link rel="stylesheet" href="/style.css">',
     '  <script src="/sidebar.js" defer></script>',
+    minimap_script,
     "</head>",
     "<body>",
     '  <button id="toggle" type="button" aria-label="Toggle sidebar">☰</button>',
     back ? '  <button class="back" type="button" aria-label="Back">←</button>' : "",
     "",
     sidebar(),
+    "",
+    minimap_html,
     "",
     "  <main>",
     content,
@@ -203,12 +288,12 @@ function copy_file(file) {
   fs.copyFileSync(path.join(root, file), path.join(out, file));
 }
 
-function validate_posts() {
+function validate_posts(items) {
   const slugs = new Set();
   const types = new Set(Object.keys(labels));
 
-  posts.forEach(function(item, index) {
-    const name = item.slug || "post " + String(index + 1);
+  items.forEach(function(item, index) {
+    const name = item.slug || "visible post " + String(index + 1);
 
     ["slug", "title", "type", "date", "edition", "abstract", "body"].forEach(function(field) {
       if (!item[field]) {
@@ -217,7 +302,7 @@ function validate_posts() {
     });
 
     if (slugs.has(item.slug)) {
-      throw new Error("duplicate slug: " + item.slug);
+      throw new Error("duplicate visible slug: " + item.slug);
     }
 
     if (!types.has(item.type)) {
@@ -260,8 +345,8 @@ function all_tags(items) {
   });
 }
 
-function build_home() {
-  const latest = sort_by_date(latest_by_title(posts)).slice(0, 3);
+function build_home(items) {
+  const latest = sort_by_date(latest_by_title(items)).slice(0, 3);
 
   write_file("index.html", shell({
     title: "anodyne avenue",
@@ -277,9 +362,9 @@ function build_home() {
   }));
 }
 
-function build_sections() {
+function build_sections(items) {
   Object.keys(labels).forEach(function(type) {
-    const items = latest_by_title(posts.filter(function(item) {
+    const section_posts = latest_by_title(items.filter(function(item) {
       return item.type === type;
     }));
 
@@ -292,13 +377,13 @@ function build_sections() {
         "      <h1>" + labels[type] + "</h1>",
         '      <p class="muted intro">' + escape_html(intros[type]) + "</p>",
         "",
-        sort_by_date(items).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
+        sort_by_date(section_posts).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
       ].join("\n")
     }));
   });
 }
 
-function build_archive() {
+function build_archive(items) {
   write_file("archive.html", shell({
     title: "archive — anodyne avenue",
     description: "All published posts, ordered by date from newest to oldest.",
@@ -308,17 +393,21 @@ function build_archive() {
       "      <h1>Archive</h1>",
       '      <p class="muted intro">All published posts, ordered by date from newest to oldest.</p>',
       "",
-      sort_by_date(posts).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
+      sort_by_date(items).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
     ].join("\n")
   }));
 }
 
-function build_posts() {
-  posts.forEach(function(item) {
+function build_posts(items) {
+  items.forEach(function(item) {
+    const prepared = prepare_body(item.body);
+    const post_minimap = minimap(prepared.headings);
+
     write_file(post_page(item), shell({
       title: item.title + " — anodyne avenue",
       description: item.abstract,
       back: true,
+      minimap: post_minimap,
       content: [
         '      <article class="post">',
         '        <p class="kicker">' + escape_html(labels[item.type]) + "</p>",
@@ -331,7 +420,7 @@ function build_posts() {
         tag_links(item),
         "",
         '        <div class="body">',
-        "          " + item.body,
+        "          " + prepared.html,
         "        </div>",
         "",
         "        <footer>anodyne avenue ©</footer>",
@@ -341,8 +430,8 @@ function build_posts() {
   });
 }
 
-function build_tags() {
-  const visible_posts = latest_by_title(posts);
+function build_tags(items) {
+  const visible_posts = latest_by_title(items);
   const tags = all_tags(visible_posts);
 
   write_file("tags.html", shell({
@@ -384,7 +473,9 @@ function build_tags() {
 }
 
 function build() {
-  validate_posts();
+  const visible_posts = shown_posts();
+
+  validate_posts(visible_posts);
 
   if (fs.existsSync(out)) {
     fs.rmSync(out, { recursive: true, force: true });
@@ -392,14 +483,18 @@ function build() {
 
   fs.mkdirSync(out, { recursive: true });
 
-  build_home();
-  build_sections();
-  build_archive();
-  build_tags();
-  build_posts();
+  build_home(visible_posts);
+  build_sections(visible_posts);
+  build_archive(visible_posts);
+  build_tags(visible_posts);
+  build_posts(visible_posts);
 
   copy_file("style.css");
   copy_file("sidebar.js");
+
+  if (fs.existsSync(path.join(root, "minimap.js"))) {
+    copy_file("minimap.js");
+  }
 
   write_file(".nojekyll", "");
 }
