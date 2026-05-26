@@ -158,9 +158,11 @@ function minimap(headings) {
     '      <p class="sidebar_section_title">On this page</p>',
     '      <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading) {
+      const marker = "&gt;".repeat(Math.max(1, heading.level - 1));
+
       return [
         '        <a class="minimap_item minimap_h' + heading.level + '" href="#' + escape_html(heading.id) + '">',
-        '          <span class="minimap_dot"></span>',
+        '          <span class="minimap_marker" aria-hidden="true">' + marker + "</span>",
         '          <span class="minimap_text">' + escape_html(heading.text) + "</span>",
         "        </a>"
       ].join("\n");
@@ -269,7 +271,7 @@ function shell(options) {
     "</head>",
     "<body>",
     '  <button id="toggle" type="button" aria-label="Toggle sidebar">☰</button>',
-    back ? '  <button class="back" type="button" aria-label="Back">←</button>' : "",
+    back ? '  <button class="back" type="button" aria-label="Back">‹</button>' : "",
     "",
     sidebar(minimap_html),
     "",
@@ -356,6 +358,7 @@ function build_home(items) {
   write_file("index.html", shell({
     title: "anodyne avenue",
     description: "An anonymous, text-first archive of essays, guides, and blog posts.",
+    back: true,
     content: [
       '      <p class="kicker">anodyne avenue</p>',
       "      <h1>Deep dives into topics of interest, looking at all sides.</h1>",

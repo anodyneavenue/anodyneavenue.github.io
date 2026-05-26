@@ -56,10 +56,6 @@ function toggle_sidebar() {
   }
 
   if (document.body.classList.contains("side_closed")) {
-    if (!sidebar_fits()) {
-      return;
-    }
-
     open_sidebar();
     return;
   }
