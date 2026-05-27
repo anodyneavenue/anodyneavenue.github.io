@@ -365,7 +365,7 @@ function build_home(items) {
     content: [
       '      <p class="kicker">anodyne avenue</p>',
       "      <h1>Deep dives into niche topics of interest.</h1>",
-      '      <p class="muted intro">An anonymous archive of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b> (<b>aa</b>).</p>',
+      '      <p class="muted intro">An anonymous archive of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b></p>',
       "",
       "      <h2>Latest</h2>",
       latest.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
