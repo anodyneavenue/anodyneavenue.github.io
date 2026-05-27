@@ -426,7 +426,7 @@ function build_posts(items) {
         "",
         "        <h1>" + escape_html(item.title) + "</h1>",
         "",
-        '        <p class="abstract"><strong>Abstract</strong>: ' + escape_html(item.abstract) + "</p>",
+        '        <p class="abstract"><strong>Abstract:</strong> ' + escape_html(item.abstract) + "</p>",
         "",
         tag_links(item),
         "",
