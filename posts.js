@@ -1,6 +1,6 @@
 const posts = [
   {
-    show: true,
+    show: false,
     slug: "hello-world",
     title: "Hello World!",
     type: "blog",
@@ -8,7 +8,7 @@ const posts = [
     // revised: "2026-05-27",
     edition: "1st edition",
     tags: ["Journal"],
-    abstract: "Hello there! This is my first post.",
+    abstract: "A short introduction to anodyne avenue: anonymity, uncertainty, unfinished questions, and the need for a slower archive of thought.",
     body:
         '<p>On this website, I write under the pseudonym <strong>anodyne avenue</strong> - a small attempt at anonymity in a time that increasingly resists it. I am, as of writing, an undergraduate physics student in the UK with strong interests in the arts and humanities.</p>' +
         '<h2>A bit more about me</h2>' +
