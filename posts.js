@@ -81,7 +81,7 @@ const posts = [
         '<p>This page will not be built.</p>'
   },
   {
-    show: true,
+    show: false,
     slug: "long_nonsense_test",
     title: "Long Nonsense Test Post",
     type: "blog",
