@@ -4,7 +4,7 @@
   --muted: #666;
   --line: #e5e5e5;
   --panel: #f7f7f7;
-  --side: 13rem;
+  --side: 15rem;
   --read: 46rem;
 
   --map-essay-start: #dbeafe;
@@ -82,19 +82,23 @@ p {
   margin: 0 0 1rem;
 }
 
+/* Hamburger button */
+
 #toggle {
   position: fixed;
   top: .8rem;
   left: .8rem;
   z-index: 40;
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.55rem;
+  height: 2.55rem;
   border: 1px solid var(--line);
-  border-radius: .35rem;
+  border-radius: .4rem;
   background: var(--bg);
   color: var(--fg);
   font: inherit;
+  font-size: 1.15rem;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -114,6 +118,7 @@ p {
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
+  transition: transform .18s ease;
 }
 
 .side_closed #sidebar {
@@ -121,13 +126,22 @@ p {
 }
 
 .title {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   min-width: 0;
-  margin: .25rem 0 1.2rem 2.8rem;
+  height: 2.75rem;
+
+  margin: -.2rem 0 1.2rem 3.35rem;
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  font-size: 1.25rem;
   font-weight: 700;
+  text-align: center;
   text-transform: lowercase;
 }
 
@@ -166,6 +180,7 @@ main {
   width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
   margin-left: max(calc(var(--side) + 1.2rem), calc((100vw - var(--read)) / 2));
   padding: 5rem 0;
+  transition: width .18s ease, margin .18s ease;
 }
 
 .side_closed main {
@@ -178,21 +193,22 @@ main {
   top: .8rem;
   left: calc(var(--side) + .8rem);
   z-index: 40;
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.55rem;
+  height: 2.55rem;
   border: 1px solid var(--line);
-  border-radius: .35rem;
+  border-radius: .4rem;
   background: var(--bg);
   color: var(--fg);
   font: inherit;
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  transition: left .18s ease, background .12s ease;
 }
 
 .side_closed .back {
-  left: 3.4rem;
+  left: 3.75rem;
 }
 
 .kicker,
@@ -415,10 +431,10 @@ main > .muted {
   overflow-x: hidden;
 
   margin: 0;
-  padding: .2rem 0 .2rem .35rem;
+  padding: .25rem 0 .25rem .5rem;
 
   display: grid;
-  gap: .1rem;
+  gap: .18rem;
 
   scrollbar-width: thin;
 }
@@ -426,10 +442,10 @@ main > .muted {
 .minimap::after {
   content: "";
   position: absolute;
-  top: .25rem;
-  bottom: .25rem;
-  left: .1rem;
-  width: 1px;
+  top: .35rem;
+  bottom: .35rem;
+  left: .18rem;
+  width: 2px;
   background: var(--line);
   pointer-events: none;
 }
@@ -437,13 +453,13 @@ main > .muted {
 .minimap::before {
   content: "";
   position: absolute;
-  top: .25rem;
-  bottom: .25rem;
-  left: .1rem;
+  top: .35rem;
+  bottom: .35rem;
+  left: .18rem;
   z-index: 1;
-  width: 1px;
+  width: 2px;
   background: var(--fg);
-  opacity: .8;
+  opacity: .85;
   transform: scaleY(var(--progress));
   transform-origin: top;
   pointer-events: none;
@@ -456,17 +472,18 @@ main > .muted {
   z-index: 2;
 
   display: grid;
-  grid-template-columns: 1.65rem 1fr;
+  grid-template-columns: 1.65rem minmax(0, 1fr);
   align-items: center;
-  gap: .35rem;
+  gap: .4rem;
 
   min-width: 0;
-  padding: .13rem .25rem;
-  border-radius: .3rem;
+  min-height: 2rem;
+  padding: .26rem .35rem;
+  border-radius: .35rem;
 
   color: var(--muted);
-  font-size: .68rem;
-  line-height: 1.25;
+  font-size: .78rem;
+  line-height: 1.28;
 
   font-weight: 500;
   letter-spacing: 0;
@@ -480,10 +497,13 @@ main > .muted {
 }
 
 .minimap_marker {
+  align-self: center;
+  justify-self: start;
+
   overflow: hidden;
   color: currentColor;
   font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .68rem;
+  font-size: .78rem;
   line-height: 1;
   letter-spacing: -.08em;
   opacity: .65;
@@ -491,9 +511,28 @@ main > .muted {
 }
 
 .minimap_text {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
+  min-width: 0;
+  overflow: visible;
+}
+
+.minimap_label {
+  display: block;
+  min-width: 0;
+  font-weight: 500;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.minimap_line {
+  display: block;
+  min-width: 0;
   white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .minimap_h3 {
@@ -507,6 +546,10 @@ main > .muted {
 .minimap_item.active {
   background: var(--panel);
   color: var(--fg);
+}
+
+.minimap_item:hover .minimap_label,
+.minimap_item.active .minimap_label {
   font-weight: 700;
 }
 
@@ -521,6 +564,7 @@ main > .muted {
   }
 }
 
+.minimap_item:hover .minimap_marker,
 .minimap_item.active .minimap_marker {
   opacity: 1;
 }
@@ -531,10 +575,51 @@ main > .muted {
   }
 }
 
-@media (max-width: 760px) {
+/* Small laptop / narrow desktop.
+   Keep the same sidebar width and button sizes.
+   Only tighten spacing slightly. */
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  :root {
+    --side: 15rem;
+  }
+
   #sidebar {
-    width: min(86vw, 21rem);
+    padding: .9rem;
+  }
+
+  .title {
+    height: 2.55rem;
+    margin: -.1rem 0 1.2rem 3.15rem;
+    font-size: 1.12rem;
+  }
+
+  .sidebar_nav a {
+    padding: .44rem .58rem;
+    font-size: .8rem;
+    letter-spacing: .06em;
+  }
+
+  .back {
+    left: calc(var(--side) + .7rem);
+  }
+}
+
+/* Mobile overlay sidebar */
+
+@media (max-width: 760px) {
+  body.side_open {
+    overflow: hidden;
+  }
+
+  #sidebar {
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
     padding: 1.15rem;
+    overflow-y: auto;
+    border-right: 0;
     transform: translateX(-100%);
   }
 
@@ -542,9 +627,31 @@ main > .muted {
     transform: translateX(0);
   }
 
+  #toggle,
+  .back {
+    top: 1.3rem;
+    width: 3rem;
+    height: 3rem;
+    border-radius: .45rem;
+  }
+
+  #toggle {
+    left: calc(1.15rem + .75rem);
+    font-size: 1.45rem;
+  }
+
+  .back,
+  .side_closed .back {
+    left: auto;
+    right: calc(1.15rem + .75rem);
+    font-size: 1.95rem;
+  }
+
   .title {
-    margin: .25rem 0 1.4rem 2.8rem;
-    font-size: 1.05rem;
+    height: 3rem;
+    margin: .15rem 5.4rem 1.6rem;
+    font-size: 1.65rem;
+    text-align: center;
   }
 
   .sidebar_nav {
@@ -562,17 +669,41 @@ main > .muted {
   }
 
   .minimap {
-    max-height: 46vh;
+    max-height: calc(100dvh - 18rem);
+    gap: .22rem;
+    padding-left: .55rem;
+  }
+
+  .minimap::after,
+  .minimap::before {
+    left: .2rem;
+    width: 2px;
   }
 
   .minimap_item {
-    grid-template-columns: 2rem 1fr;
-    padding: .3rem .35rem;
-    font-size: .88rem;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    min-height: 2.35rem;
+    padding: .38rem .45rem;
+    font-size: 1rem;
+    line-height: 1.3;
   }
 
   .minimap_marker {
-    font-size: .88rem;
+    font-size: 1rem;
+  }
+
+  .minimap_label {
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .minimap_line {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
   }
 
   #sidebar footer {
@@ -583,10 +714,6 @@ main > .muted {
   .side_closed main {
     width: min(var(--read), calc(100vw - 2.4rem));
     margin: 0 auto;
-    padding: 4rem 1.2rem;
-  }
-
-  .back {
-    left: 3.4rem;
+    padding: 6.25rem 1.2rem 4rem;
   }
 }

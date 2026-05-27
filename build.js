@@ -166,7 +166,7 @@ function minimap(headings, type) {
       return [
         '        <a class="minimap_item minimap_h' + heading.level + '" style="--map-mix: ' + mix + '%;" href="#' + escape_html(heading.id) + '">',
         '          <span class="minimap_marker" aria-hidden="true">' + marker + "</span>",
-        '          <span class="minimap_text">' + escape_html(heading.text) + "</span>",
+        '          <span class="minimap_text" data-text="' + escape_html(heading.text) + '"><span class="minimap_label">' + escape_html(heading.text) + "</span></span>",
         "        </a>"
       ].join("\n");
     }).join("\n"),
