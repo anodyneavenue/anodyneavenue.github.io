@@ -1,5 +1,35 @@
 const posts = [
   {
+    show: true,
+    slug: "hello-world",
+    title: "Hello World!",
+    type: "blog",
+    date: "2026-05-27",
+    // revised: "2026-05-26",
+    edition: "1st edition",
+    tags: ["journal"],
+    abstract: "Hello there! This is my first entry.",
+    body:
+        '<p>On this website, I write under the pseudonym anodyne avenue - a small attempt at anonymity in a time that increasingly resists it. I am, as of writing, an undergraduate physics student in the UK with strong interests in the arts and humanities.</p>' +
+        '<h2>A bit more about me</h2>' +
+        '<p>Foundationally, I seem to exist somewhere between two states: curiosity and confusion, each constantly feeding the other.</p>' +
+        '<p>I frequently fall into deep dives on obscure topics and questions, which only intensify both states. More often than not, I emerge from these ventures with even more questions than answers.</p>' +
+        '<p>Unfortunately, I also have a tendency to leave many of these investigations unfinished - abandoned sometimes just before completion when some other shiny new idea passes by. I have often struggled to carry these ventures through to completion, partly because I have had no real outlet for them... until now!</p>' +
+        '<p>At times, this has been a source of loneliness: I often find myself dissatisfied with the incompleteness of an answer while others seem content to leave it there.</p>' +
+        '<p>A large part of this tendency stems from an ongoing attempt to find certainty in a world that appears to offer very little of it, despite our natural inclination to force things neatly into boxes with clear edges and definitions. Science, in one flavour or another, has been one avenue through which I have tried to approach that problem. Yet even this eventually encounters its own limits: finite precision and resolution, uncertainty, approximation, and so on.</p>' +
+        '<p>Here is something I found particularly interesting: one of my lecturers once said that a large amount of modern physics is now performed using numerical methods, as many problems cannot be solved analytically - using only pen and paper - in any usable form. Instead, we brute-force approximations from computers until we converge upon some desired decimal place.</p>' +
+        '<p>I\'ve gradually come to realise that a large part of studying physics at university is accepting that pure certainty - true 0% or 100% certainty - does not really exist. We can approach conclusions. We can converge towards them. We can increase confidence given the available evidence and data. But there is always a small gap between certainty and reality.</p>' +
+        '<p>That idea has gradually become part of my broader writing ethos.</p>' +
+        '<p>Accepting this has led me to search for understanding elsewhere as well - across philosophy, literature, history, art, and other disciplines that attempt, in their own ways, to grapple with many of the same underlying questions.</p>' +
+        '<h2>anodyne avenue</h2>' +
+        '<p>This website exists partly as an attempt to give some structure to that search.</p>' +
+        '<p>anodyne avenue is intended to be a text-first archive of essays, notes, guides, and reflections: a place to think slowly and methodically; to follow ideas properly; to remove outside noise where possible; and to document what I learn along the way.</p>' +
+        '<p>Some posts will be technical, others philosophical or personal; many will likely sit somewhere in between.</p>' +
+        '<h2>The aim is exploration</h2>' +
+        '<p>If you have somehow wandered here and find yourself similarly curious and, more often than not, equally confused - or dissatisfied with shallow explanations - then perhaps some part of this archive may prove useful to you as well.</p>' +
+        '<p>Thank you for reading.</p>'
+  },
+    {
     show: false,
     slug: "template",
     title: "Template for a post",
