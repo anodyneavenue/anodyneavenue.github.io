@@ -146,10 +146,10 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: .3rem .45rem;
-  border-radius: .35rem;
+  padding: .48rem .65rem;
+  border-radius: .45rem;
   color: var(--muted);
-  font-size: .75rem;
+  font-size: .86rem;
   font-weight: 700;
   letter-spacing: .07em;
   text-transform: uppercase;
@@ -552,8 +552,8 @@ main > .muted {
   }
 
   .sidebar_nav a {
-    padding: .55rem .65rem;
-    font-size: .95rem;
+    padding: .68rem .75rem;
+    font-size: 1rem;
     letter-spacing: .06em;
   }
 
