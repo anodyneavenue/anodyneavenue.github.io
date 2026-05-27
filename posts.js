@@ -10,7 +10,7 @@ const posts = [
     tags: ["journal"],
     abstract: "Hello there! This is my first entry.",
     body:
-        '<p>On this website, I write under the pseudonym anodyne avenue - a small attempt at anonymity in a time that increasingly resists it. I am, as of writing, an undergraduate physics student in the UK with strong interests in the arts and humanities.</p>' +
+        '<p>On this website, I write under the pseudonym <strong>anodyne avenue</strong> - a small attempt at anonymity in a time that increasingly resists it. I am, as of writing, an undergraduate physics student in the UK with strong interests in the arts and humanities.</p>' +
         '<h2>A bit more about me</h2>' +
         '<p>Foundationally, I seem to exist somewhere between two states: curiosity and confusion, each constantly feeding the other.</p>' +
         '<p>I frequently fall into deep dives on obscure topics and questions, which only intensify both states. More often than not, I emerge from these ventures with even more questions than answers.</p>' +
@@ -21,7 +21,7 @@ const posts = [
         '<p>I\'ve gradually come to realise that a large part of studying physics at university is accepting that pure certainty - true 0% or 100% certainty - does not really exist. We can approach conclusions. We can converge towards them. We can increase confidence given the available evidence and data. But there is always a small gap between certainty and reality.</p>' +
         '<p>That idea has gradually become part of my broader writing ethos.</p>' +
         '<p>Accepting this has led me to search for understanding elsewhere as well - across philosophy, literature, history, art, and other disciplines that attempt, in their own ways, to grapple with many of the same underlying questions.</p>' +
-        '<h2>anodyne avenue</h2>' +
+        '<h3>anodyne avenue</h3>' +
         '<p>This website exists partly as an attempt to give some structure to that search.</p>' +
         '<p>anodyne avenue is intended to be a text-first archive of essays, notes, guides, and reflections: a place to think slowly and methodically; to follow ideas properly; to remove outside noise where possible; and to document what I learn along the way.</p>' +
         '<p>Some posts will be technical, others philosophical or personal; many will likely sit somewhere in between.</p>' +
