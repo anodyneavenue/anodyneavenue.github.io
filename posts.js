@@ -8,7 +8,7 @@ const posts = [
     // revised: "2026-05-26",
     edition: "1st edition",
     tags: ["journal"],
-    abstract: "Hello there! This is my first entry.",
+    abstract: "Hello there! This is my first post.",
     body:
         '<p>On this website, I write under the pseudonym <strong>anodyne avenue</strong> - a small attempt at anonymity in a time that increasingly resists it. I am, as of writing, an undergraduate physics student in the UK with strong interests in the arts and humanities.</p>' +
         '<h2>A bit more about me</h2>' +
