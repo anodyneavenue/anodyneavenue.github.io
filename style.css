@@ -7,8 +7,15 @@
   --side: 13rem;
   --read: 46rem;
 
-  --map-start: #dbeafe;
-  --map-end: #dcfce7;
+  --map-essay-start: #dbeafe;
+  --map-essay-end: #dcfce7;
+  --map-guide-start: #dcfce7;
+  --map-guide-end: #fef9c3;
+  --map-blog-start: #fef3c7;
+  --map-blog-end: #fecaca;
+
+  --map-start: var(--map-essay-start);
+  --map-end: var(--map-essay-end);
 }
 
 html {
@@ -24,8 +31,15 @@ html {
     --line: #292929;
     --panel: #141414;
 
-    --map-start: #1e3a5f;
-    --map-end: #1f4f3a;
+    --map-essay-start: #1e3a5f;
+    --map-essay-end: #1f4f3a;
+    --map-guide-start: #1f4f3a;
+    --map-guide-end: #5c4f1f;
+    --map-blog-start: #5c3f1f;
+    --map-blog-end: #5a2626;
+
+    --map-start: var(--map-essay-start);
+    --map-end: var(--map-essay-end);
   }
 }
 
@@ -262,19 +276,70 @@ main > .muted {
 
 .tag_index {
   display: grid;
+  gap: .45rem;
+}
+
+.tag_card {
+  position: relative;
+  display: grid;
+  gap: .15rem;
+  padding: .45rem .65rem;
+  margin-top: .45rem;
+  border-top: 0;
+  border-radius: .4rem;
+}
+
+.tag_card::before {
+  content: "";
+  position: absolute;
+  top: -.45rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--line);
+}
+
+.tag_card:hover,
+.tag_card:active {
+  background: var(--panel);
+}
+
+.tag_card span {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tag_card:hover span {
+  text-decoration: underline;
+}
+
+.tag_index_grouped {
+  gap: 1.8rem;
+}
+
+.tag_group {
+  display: grid;
   gap: .5rem;
 }
 
-.tag_index a {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: .75rem 0;
-  border-top: 1px solid var(--line);
+.tag_group h2 {
+  margin: 0;
+  padding: 0 0 .35rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 
-.tag_index a:hover span {
-  text-decoration: underline;
+.tag_group .tag_card:first-of-type::before {
+  display: none;
+}
+
+.tag_group .tag_card:first-of-type {
+  border-top: 0;
 }
 
 .body {
@@ -298,6 +363,21 @@ main > .muted {
   margin-top: 3rem;
   padding-top: 1rem;
   border-top: 1px solid var(--line);
+}
+
+.map_essays {
+  --map-start: var(--map-essay-start);
+  --map-end: var(--map-essay-end);
+}
+
+.map_guides {
+  --map-start: var(--map-guide-start);
+  --map-end: var(--map-guide-end);
+}
+
+.map_blog {
+  --map-start: var(--map-blog-start);
+  --map-end: var(--map-blog-end);
 }
 
 #sidebar footer {
@@ -370,6 +450,8 @@ main > .muted {
 }
 
 .minimap_item {
+  --map-mix: 50%;
+
   position: relative;
   z-index: 2;
 
@@ -392,7 +474,7 @@ main > .muted {
 }
 
 .minimap_item:hover {
-  background: color-mix(in srgb, var(--map-start), var(--map-end) var(--map-mix));
+  background: var(--panel);
   color: var(--fg);
   text-decoration: none;
 }
@@ -423,9 +505,20 @@ main > .muted {
 }
 
 .minimap_item.active {
-  background: color-mix(in srgb, var(--map-start), var(--map-end) var(--map-mix));
+  background: var(--panel);
   color: var(--fg);
   font-weight: 700;
+}
+
+@supports (background: color-mix(in srgb, white, black)) {
+  .minimap_item:hover,
+  .minimap_item.active {
+    background: color-mix(
+            in srgb,
+            var(--map-start) calc(100% - var(--map-mix, 50%)),
+            var(--map-end) var(--map-mix, 50%)
+    );
+  }
 }
 
 .minimap_item.active .minimap_marker {

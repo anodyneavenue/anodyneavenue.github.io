@@ -148,7 +148,7 @@ function prepare_body(body) {
   };
 }
 
-function minimap(headings) {
+function minimap(headings, type) {
   if (!headings || headings.length < 3) {
     return "";
   }
@@ -156,7 +156,7 @@ function minimap(headings) {
   const max_index = Math.max(1, headings.length - 1);
 
   return [
-    '    <section class="sidebar_minimap" aria-label="On this page">',
+    '    <section class="sidebar_minimap map_' + escape_html(type) + '" aria-label="On this page">',
     '      <p class="sidebar_section_title">On this page</p>',
     '      <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading, index) {
@@ -350,9 +350,127 @@ function all_tags(items) {
     });
   });
 
-  return [...tags.values()].sort(function(a, b) {
+  return [...tags.values()];
+}
+
+function tag_count_label(count) {
+  if (count === 1) {
+    return "1 post";
+  }
+
+  return count + " posts";
+}
+
+function tag_latest_date(tag) {
+  const latest = sort_by_date(tag.posts)[0];
+
+  if (!latest) {
+    return "";
+  }
+
+  return latest.date;
+}
+
+function tag_type_label(tag) {
+  const type_order = Object.keys(labels);
+  const found = new Set(tag.posts.map(function(item) {
+    return item.type;
+  }));
+
+  return type_order.filter(function(type) {
+    return found.has(type);
+  }).map(function(type) {
+    return labels[type].toLowerCase();
+  }).join(" / ");
+}
+
+function tag_meta(tag) {
+  const parts = [
+    tag_count_label(tag.posts.length),
+    "latest " + tag_latest_date(tag),
+    tag_type_label(tag)
+  ];
+
+  return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
+function sort_tags_by_density(tags) {
+  return [...tags].sort(function(a, b) {
+    const count_difference = b.posts.length - a.posts.length;
+
+    if (count_difference !== 0) {
+      return count_difference;
+    }
+
     return a.name.localeCompare(b.name);
   });
+}
+
+function sort_tags_alphabetically(tags) {
+  return [...tags].sort(function(a, b) {
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function tag_group_letter(tag) {
+  const first = String(tag.name || "").trim().charAt(0).toUpperCase();
+
+  if (/^[A-Z0-9]$/.test(first)) {
+    return first;
+  }
+
+  return "#";
+}
+
+function tag_card(tag) {
+  return [
+    '        <a class="tag_card" href="/tag/' + tag.slug + '.html">',
+    "          <small>" + tag_meta(tag) + "</small>",
+    "          <span>" + escape_html(tag.name) + "</span>",
+    "        </a>"
+  ].join("\n");
+}
+
+function tag_index(tags) {
+  if (!tags.length) {
+    return '      <p class="muted">No tags yet.</p>';
+  }
+
+  if (tags.length < 20) {
+    return [
+      '      <section class="tag_index">',
+      sort_tags_by_density(tags).map(tag_card).join("\n"),
+      "      </section>"
+    ].join("\n");
+  }
+
+  const grouped = new Map();
+
+  sort_tags_alphabetically(tags).forEach(function(tag) {
+    const letter = tag_group_letter(tag);
+
+    if (!grouped.has(letter)) {
+      grouped.set(letter, []);
+    }
+
+    grouped.get(letter).push(tag);
+  });
+
+  return [
+    '      <section class="tag_index tag_index_grouped">',
+    [...grouped.entries()].map(function(entry) {
+      const letter = entry[0];
+      const group_tags = entry[1];
+
+      return [
+        '        <section class="tag_group">',
+        "          <h2>" + escape_html(letter) + "</h2>",
+        group_tags.map(tag_card).join("\n"),
+        "        </section>"
+      ].join("\n");
+    }).join("\n"),
+    "      </section>"
+  ].join("\n");
 }
 
 function build_home(items) {
@@ -412,7 +530,7 @@ function build_archive(items) {
 function build_posts(items) {
   items.forEach(function(item) {
     const prepared = prepare_body(item.body);
-    const post_minimap = minimap(prepared.headings);
+    const post_minimap = minimap(prepared.headings, item.type);
 
     write_file(post_page(item), shell({
       title: "anodyne avenue - " + item.title,
@@ -447,35 +565,26 @@ function build_tags(items) {
 
   write_file("tags.html", shell({
     title: "anodyne avenue - tags",
-    description: "Posts grouped by tag.",
+    description: "A subject index for the archive.",
     back: true,
     content: [
       '      <p class="kicker">anodyne avenue</p>',
       "      <h1>Tags</h1>",
-      '      <p class="muted intro">Posts grouped by tag.</p>',
+      '      <p class="muted intro">A subject index for the archive. Tags group posts by recurring themes, methods, questions, and areas of interest.</p>',
       "",
-      '      <section class="tag_index">',
-      tags.map(function(tag) {
-        return [
-          '        <a href="/tag/' + tag.slug + '.html">',
-          "          <span>" + escape_html(tag.name) + "</span>",
-          "          <small>" + tag.posts.length + "</small>",
-          "        </a>"
-        ].join("\n");
-      }).join("\n") || '        <p class="muted">No tags yet.</p>',
-      "      </section>"
+      tag_index(tags)
     ].join("\n")
   }));
 
-  tags.forEach(function(tag) {
+  sort_tags_alphabetically(tags).forEach(function(tag) {
     write_file("tag/" + tag.slug + ".html", shell({
       title: "anodyne avenue - " + tag.name,
-      description: "Posts tagged " + tag.name + ".",
+      description: "Posts filed under " + tag.name + ".",
       back: true,
       content: [
         '      <p class="kicker">tag</p>',
         "      <h1>" + escape_html(tag.name) + "</h1>",
-        '      <p class="muted intro">Posts tagged ' + escape_html(tag.name) + ".</p>",
+        '      <p class="muted intro">Posts filed under this tag, ordered from newest to oldest.</p>',
         "",
         sort_by_date(tag.posts).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
       ].join("\n")
