@@ -139,10 +139,10 @@ p {
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   text-align: center;
-  text-transform: lowercase;
+  text-transform: uppercase;
 }
 
 .title:hover {
@@ -226,9 +226,22 @@ footer {
   text-transform: uppercase;
 }
 
+.kicker a:hover {
+  text-decoration: underline;
+}
+
 .intro,
 main > .muted {
   margin-bottom: 2.5rem;
+}
+
+.intro a {
+  text-decoration: underline;
+  text-underline-offset: .12em;
+}
+
+.intro a:hover {
+  color: var(--fg);
 }
 
 .card {
@@ -579,6 +592,7 @@ main > .muted {
    Keep the same sidebar width and button sizes.
    Only tighten spacing slightly. */
 
+/*
 @media (min-width: 761px) and (max-width: 1050px) {
   :root {
     --side: 15rem;
@@ -604,6 +618,7 @@ main > .muted {
     left: calc(var(--side) + .7rem);
   }
 }
+*/
 
 /* Mobile overlay sidebar */
 

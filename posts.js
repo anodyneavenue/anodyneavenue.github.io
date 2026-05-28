@@ -1,6 +1,6 @@
 const posts = [
   {
-    show: false,
+    show: true,
     slug: "hello-world",
     title: "Hello World!",
     type: "blog",
@@ -72,13 +72,13 @@ const posts = [
     show: false,
     slug: "debug_post",
     title: "Debug Post",
-    type: "blog",
+    type: "essays",
     date: "2026-05-26",
     edition: "draft",
     tags: ["debug"],
     abstract: "This will not appear.",
     body:
-        '<p>This page will not be built.</p>'
+        '<p>This page will be built.</p>'
   },
   {
     show: false,

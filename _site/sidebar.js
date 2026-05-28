@@ -1,22 +1,12 @@
 const sidebar_key = "anodyne_sidebar_closed";
 
+const mobile_query = matchMedia("(max-width: 760px)");
+const pre_mobile_query = matchMedia("(max-width: 795px)");
+
+let desktop_sidebar_was_open_before_mobile = false;
+
 function mobile_screen() {
-  return matchMedia("(max-width: 760px)").matches;
-}
-
-function sidebar_width() {
-  const sidebar = document.getElementById("sidebar");
-
-  if (!sidebar) {
-    return 0;
-  }
-
-  return sidebar.getBoundingClientRect().width;
-}
-
-function sidebar_fits() {
-  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  return innerWidth - sidebar_width() >= 44 * rem;
+  return mobile_query.matches;
 }
 
 function save_sidebar_state() {
@@ -97,13 +87,59 @@ function close_mobile_sidebar_after_internal_link(event) {
   document.body.classList.remove("side_open");
 }
 
-function check_sidebar_size() {
-  if (mobile_screen()) {
+function handle_pre_mobile_change(event) {
+  /*
+    Desktop -> near-mobile:
+    remember whether the desktop sidebar was open,
+    then close it before the CSS switches to full-screen mobile.
+  */
+  if (event.matches && !mobile_screen()) {
+    desktop_sidebar_was_open_before_mobile =
+        !document.body.classList.contains("side_closed");
+
+    document.body.classList.add("side_closed");
+    document.body.classList.remove("side_open");
     return;
   }
 
-  if (!sidebar_fits()) {
-    close_sidebar();
+  /*
+    Near-mobile -> wider desktop:
+    if it was open before being force-collapsed,
+    restore it.
+  */
+  if (!event.matches && !mobile_screen() && desktop_sidebar_was_open_before_mobile) {
+    document.body.classList.remove("side_closed");
+    document.body.classList.remove("side_open");
+    desktop_sidebar_was_open_before_mobile = false;
+    save_sidebar_state();
+  }
+}
+
+function handle_breakpoint_change(event) {
+  const is_mobile = event.matches;
+
+  /*
+    Desktop -> mobile:
+    mobile sidebar starts closed.
+  */
+  if (is_mobile) {
+    document.body.classList.remove("side_open");
+    return;
+  }
+
+  /*
+    Mobile -> desktop:
+    if the mobile sidebar is open, OR if the desktop sidebar was open
+    before being force-collapsed, restore the normal desktop sidebar.
+  */
+  if (
+      document.body.classList.contains("side_open") ||
+      desktop_sidebar_was_open_before_mobile
+  ) {
+    document.body.classList.remove("side_open");
+    document.body.classList.remove("side_closed");
+    desktop_sidebar_was_open_before_mobile = false;
+    save_sidebar_state();
   }
 }
 
@@ -127,6 +163,5 @@ document.querySelectorAll(".back").forEach(function(item) {
 document.addEventListener("click", close_mobile_sidebar_after_internal_link, true);
 document.addEventListener("click", close_mobile_sidebar);
 
-addEventListener("resize", check_sidebar_size);
-
-check_sidebar_size();
+mobile_query.addEventListener("change", handle_breakpoint_change);
+pre_mobile_query.addEventListener("change", handle_pre_mobile_change);

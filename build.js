@@ -17,6 +17,8 @@ const intros = {
 const root = __dirname;
 const out = path.join(root, "_site");
 
+const site_url = "https://anodyneavenue.github.io";
+
 function shown_posts() {
   return posts.filter(function(item) {
     return item.show === true;
@@ -29,6 +31,23 @@ function escape_html(value) {
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;");
+}
+
+function escape_xml(value) {
+  return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&apos;");
+}
+
+function absolute_url(file) {
+  if (!file || file === "index.html") {
+    return site_url + "/";
+  }
+
+  return site_url + "/" + String(file).replace(/^\/+/, "");
 }
 
 function strip_html(value) {
@@ -187,6 +206,26 @@ function tag_page(tag) {
   return "tag/" + tag_slug(tag) + ".html";
 }
 
+function linked_kicker(label, href) {
+  return '<p class="kicker"><a href="' + escape_html(href) + '">' + escape_html(label) + '</a></p>';
+}
+
+function site_kicker() {
+  return linked_kicker("anodyne avenue", "/");
+}
+
+function plain_site_kicker() {
+  return '<p class="kicker">anodyne avenue</p>';
+}
+
+function section_kicker(type) {
+  return linked_kicker(labels[type], "/" + page_for_type(type));
+}
+
+function tags_kicker() {
+  return linked_kicker("tag", "/tags.html");
+}
+
 function meta(item) {
   const parts = [
     item.date,
@@ -233,7 +272,7 @@ function post_card(item) {
 function sidebar(extra_html) {
   return [
     '  <aside id="sidebar">',
-    '    <a class="title" href="/">anodyne avenue</a>',
+    '    <a class="title" href="/">ANODYNE AVENUE</a>',
     "",
     '    <nav class="sidebar_nav" aria-label="Main sections">',
     '      <a href="/essays.html">Essays</a>',
@@ -477,13 +516,13 @@ function build_home(items) {
   const latest = sort_by_date(latest_by_title(items)).slice(0, 3);
 
   write_file("index.html", shell({
-    title: "anodyne avenue - home",
+    title: "anodyne avenue",
     description: "An anonymous, text-first archive of essays, guides, and blog posts.",
     back: true,
     content: [
-      '      <p class="kicker">anodyne avenue</p>',
+      '      ' + plain_site_kicker(),
       "      <h1>Deep dives into niche topics of interest.</h1>",
-      '      <p class="muted intro">An anonymous archive of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b></p>',
+      '      <p class="muted intro">An anonymous <a href="/archive.html">archive</a> of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b></p>',
       "",
       "      <h2>Latest</h2>",
       latest.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
@@ -502,7 +541,7 @@ function build_sections(items) {
       description: intros[type],
       back: true,
       content: [
-        '      <p class="kicker">anodyne avenue</p>',
+        '      ' + site_kicker(),
         "      <h1>" + labels[type] + "</h1>",
         '      <p class="muted intro">' + escape_html(intros[type]) + "</p>",
         "",
@@ -518,13 +557,83 @@ function build_archive(items) {
     description: "All published posts, ordered by date from newest to oldest.",
     back: true,
     content: [
-      '      <p class="kicker">anodyne avenue</p>',
+      '      ' + site_kicker(),
       "      <h1>Archive</h1>",
       '      <p class="muted intro">All published posts, ordered by date from newest to oldest.</p>',
       "",
       sort_by_date(items).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
     ].join("\n")
   }));
+}
+
+function build_404() {
+  write_file("404.html", shell({
+    title: "anodyne avenue - not found",
+    description: "Page not found.",
+    back: true,
+    content: [
+      '      ' + site_kicker(),
+      "      <h1>404</h1>",
+      '      <p class="muted intro">The page you were looking for does not exist, may have moved, or may never have been written.</p>',
+      "",
+      '      <section class="tag_index">',
+      '        <a class="tag_card" href="/tags.html">',
+      "          <small>A subject index for the archive.</small>",
+      "          <span>Tags</span>",
+      "        </a>",
+      '        <a class="tag_card" href="/archive.html">',
+      "          <small>All published posts.</small>",
+      "          <span>Archive</span>",
+      "        </a>",
+      "      </section>"
+    ].join("\n")
+  }));
+}
+
+function sitemap_entry(file, lastmod) {
+  const lines = [
+    "  <url>",
+    "    <loc>" + escape_xml(absolute_url(file)) + "</loc>"
+  ];
+
+  if (lastmod) {
+    lines.push("    <lastmod>" + escape_xml(lastmod) + "</lastmod>");
+  }
+
+  lines.push("  </url>");
+
+  return lines.join("\n");
+}
+
+function build_sitemap(items) {
+  const latest_posts = latest_by_title(items);
+  const tags = all_tags(latest_posts);
+
+  const entries = [];
+
+  entries.push(sitemap_entry("index.html"));
+
+  Object.keys(labels).forEach(function(type) {
+    entries.push(sitemap_entry(page_for_type(type)));
+  });
+
+  entries.push(sitemap_entry("archive.html"));
+  entries.push(sitemap_entry("tags.html"));
+
+  sort_by_date(items).forEach(function(item) {
+    entries.push(sitemap_entry(post_page(item), item.revised || item.date));
+  });
+
+  sort_tags_alphabetically(tags).forEach(function(tag) {
+    entries.push(sitemap_entry("tag/" + tag.slug + ".html", tag_latest_date(tag)));
+  });
+
+  write_file("sitemap.xml", [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    entries.join("\n"),
+    "</urlset>"
+  ].join("\n"));
 }
 
 function build_posts(items) {
@@ -539,7 +648,7 @@ function build_posts(items) {
       minimap: post_minimap,
       content: [
         '      <article class="post">',
-        '        <p class="kicker">' + escape_html(labels[item.type]) + "</p>",
+        '        ' + section_kicker(item.type),
         "        <small>" + meta(item) + "</small>",
         "",
         "        <h1>" + escape_html(item.title) + "</h1>",
@@ -568,7 +677,7 @@ function build_tags(items) {
     description: "A subject index for the archive.",
     back: true,
     content: [
-      '      <p class="kicker">anodyne avenue</p>',
+      '      ' + site_kicker(),
       "      <h1>Tags</h1>",
       '      <p class="muted intro">A subject index for the archive. Tags group posts by recurring themes, methods, questions, and areas of interest.</p>',
       "",
@@ -582,7 +691,7 @@ function build_tags(items) {
       description: "Posts filed under " + tag.name + ".",
       back: true,
       content: [
-        '      <p class="kicker">tag</p>',
+        '      ' + tags_kicker(),
         "      <h1>" + escape_html(tag.name) + "</h1>",
         '      <p class="muted intro">Posts filed under this tag, ordered from newest to oldest.</p>',
         "",
@@ -606,8 +715,10 @@ function build() {
   build_home(visible_posts);
   build_sections(visible_posts);
   build_archive(visible_posts);
+  build_404();
   build_tags(visible_posts);
   build_posts(visible_posts);
+  build_sitemap(visible_posts);
 
   copy_file("style.css");
   copy_file("sidebar.js");
