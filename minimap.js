@@ -4,6 +4,9 @@ let minimap_ticking = false;
 let minimap_wrap_ticking = false;
 let minimap_resize_observer = null;
 
+let minimap_user_scrolling = false;
+let minimap_user_scroll_timer = null;
+
 function minimap_items() {
     return Array.from(document.querySelectorAll(".minimap_item"));
 }
@@ -78,7 +81,21 @@ function active_index_from_scroll(pairs) {
     return positions.length - 1;
 }
 
+function note_minimap_user_scroll() {
+    minimap_user_scrolling = true;
+
+    clearTimeout(minimap_user_scroll_timer);
+
+    minimap_user_scroll_timer = setTimeout(function() {
+        minimap_user_scrolling = false;
+    }, 220);
+}
+
 function keep_active_item_visible(minimap, item) {
+    if (minimap_user_scrolling) {
+        return;
+    }
+
     const top = item.offsetTop;
     const bottom = top + item.offsetHeight;
     const buffer = 12;
@@ -103,6 +120,13 @@ function set_active_pair(minimap, pairs, active_pair) {
     });
 
     minimap.style.setProperty("--progress", String(document_progress()));
+
+    const minimap_wrapper = minimap.closest(".sidebar_minimap");
+
+    if (minimap_wrapper) {
+        minimap_wrapper.style.setProperty("--progress", String(document_progress()));
+    }
+
     keep_active_item_visible(minimap, active_pair.item);
 }
 
@@ -393,6 +417,7 @@ function scroll_to_heading(event) {
 
     locked_minimap_id = id;
     programmatic_scroll = true;
+    minimap_user_scrolling = false;
 
     minimap_items().forEach(function(other) {
         other.classList.toggle("active", other === item);
@@ -415,8 +440,13 @@ function scroll_to_heading(event) {
     }, 900);
 }
 
-function unlock_minimap_from_user_scroll() {
+function unlock_minimap_from_user_scroll(event) {
     if (programmatic_scroll) {
+        return;
+    }
+
+    if (event && event.target.closest(".minimap")) {
+        note_minimap_user_scroll();
         return;
     }
 
@@ -437,7 +467,12 @@ function request_minimap_update() {
     });
 }
 
-document.querySelector(".minimap")?.addEventListener("click", scroll_to_heading);
+const minimap = document.querySelector(".minimap");
+
+minimap?.addEventListener("click", scroll_to_heading);
+minimap?.addEventListener("wheel", note_minimap_user_scroll, { passive: true });
+minimap?.addEventListener("touchmove", note_minimap_user_scroll, { passive: true });
+minimap?.addEventListener("pointerdown", note_minimap_user_scroll, { passive: true });
 
 document.addEventListener("scroll", request_minimap_update, { passive: true });
 
@@ -456,7 +491,7 @@ document.addEventListener("keydown", function(event) {
     ];
 
     if (scroll_keys.includes(event.key)) {
-        unlock_minimap_from_user_scroll();
+        unlock_minimap_from_user_scroll(event);
     }
 });
 

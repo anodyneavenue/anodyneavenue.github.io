@@ -701,6 +701,57 @@ function build_tags(items) {
   });
 }
 
+function build_robots() {
+  write_file("robots.txt", [
+    "# anodyne avenue robots.txt",
+    "# Allows ordinary indexing, but opts out of major AI training / AI data crawlers.",
+    "",
+    "User-agent: *",
+    "Allow: /",
+    "",
+    "Sitemap: https://anodyneavenue.github.io/sitemap.xml",
+    "",
+    "User-agent: GPTBot",
+    "Disallow: /",
+    "",
+    "User-agent: ClaudeBot",
+    "Disallow: /",
+    "",
+    "User-agent: Google-Extended",
+    "Disallow: /",
+    "",
+    "User-agent: Applebot-Extended",
+    "Disallow: /",
+    "",
+    "User-agent: CCBot",
+    "Disallow: /",
+    "",
+    "User-agent: PerplexityBot",
+    "Disallow: /",
+    "",
+    "User-agent: Meta-ExternalAgent",
+    "Disallow: /",
+    "",
+    "User-agent: Bytespider",
+    "Disallow: /",
+    "",
+    "User-agent: anthropic-ai",
+    "Disallow: /",
+    "",
+    "User-agent: Claude-SearchBot",
+    "Disallow: /",
+    "",
+    "User-agent: Claude-User",
+    "Disallow: /",
+    "",
+    "User-agent: ChatGPT-User",
+    "Disallow: /",
+    "",
+    "User-agent: OAI-SearchBot",
+    "Disallow: /"
+  ].join("\n") + "\n");
+}
+
 function build() {
   const visible_posts = shown_posts();
 
@@ -715,10 +766,11 @@ function build() {
   build_home(visible_posts);
   build_sections(visible_posts);
   build_archive(visible_posts);
-  build_404();
   build_tags(visible_posts);
+  build_404();
   build_posts(visible_posts);
   build_sitemap(visible_posts);
+  build_robots();
 
   copy_file("style.css");
   copy_file("sidebar.js");

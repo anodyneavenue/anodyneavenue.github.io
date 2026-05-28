@@ -442,6 +442,7 @@ main > .muted {
   max-height: min(42vh, 24rem);
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
 
   margin: 0;
   padding: .25rem 0 .25rem .5rem;
@@ -452,23 +453,31 @@ main > .muted {
   scrollbar-width: thin;
 }
 
-.minimap::after {
+.sidebar_minimap {
+  position: relative;
+  min-height: 0;
+  margin-top: 1rem;
+  padding-top: .85rem;
+  border-top: 1px solid var(--line);
+}
+
+.sidebar_minimap::after {
   content: "";
   position: absolute;
-  top: .35rem;
-  bottom: .35rem;
-  left: .18rem;
+  top: 2.9rem;
+  bottom: .25rem;
+  left: .68rem;
   width: 2px;
   background: var(--line);
   pointer-events: none;
 }
 
-.minimap::before {
+.sidebar_minimap::before {
   content: "";
   position: absolute;
-  top: .35rem;
-  bottom: .35rem;
-  left: .18rem;
+  top: 2.9rem;
+  bottom: .25rem;
+  left: .68rem;
   z-index: 1;
   width: 2px;
   background: var(--fg);
