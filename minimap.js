@@ -21,6 +21,15 @@ function minimap_pairs() {
             }
 
             const id = decodeURIComponent(href.slice(1));
+
+            if (id === "page_top") {
+                return {
+                    id: id,
+                    item: item,
+                    heading: document.body
+                };
+            }
+
             const heading = document.getElementById(id);
 
             if (!heading) {
@@ -63,6 +72,46 @@ function active_index_from_scroll(pairs) {
 
     if (max > 0 && scrollY >= max - 4) {
         return pairs.length - 1;
+    }
+
+    /*
+      Special handling for the post title.
+
+      The title minimap item uses id="page_top". If we let the normal midpoint
+      logic run, the first real heading can become active too early because the
+      title is treated as being at scroll position 0.
+
+      Instead:
+      - keep the title active while the first real heading is still comfortably
+        below the upper part of the viewport;
+      - switch to normal heading logic once the first real heading approaches.
+    */
+    if (pairs[0] && pairs[0].id === "page_top") {
+        if (pairs.length === 1) {
+            return 0;
+        }
+
+        const first_heading_top = heading_top(pairs[1].heading);
+        const title_switch_point = Math.max(0, first_heading_top - innerHeight * 0.22);
+
+        if (scrollY < title_switch_point) {
+            return 0;
+        }
+
+        const cursor = scrollY + innerHeight * 0.38;
+        const positions = pairs.map(function(pair) {
+            return heading_top(pair.heading);
+        });
+
+        for (let i = 1; i < positions.length - 1; i = i + 1) {
+            const midpoint = (positions[i] + positions[i + 1]) / 2;
+
+            if (cursor < midpoint) {
+                return i;
+            }
+        }
+
+        return positions.length - 1;
     }
 
     const cursor = scrollY + innerHeight * 0.38;
@@ -120,13 +169,6 @@ function set_active_pair(minimap, pairs, active_pair) {
     });
 
     minimap.style.setProperty("--progress", String(document_progress()));
-
-    const minimap_wrapper = minimap.closest(".sidebar_minimap");
-
-    if (minimap_wrapper) {
-        minimap_wrapper.style.setProperty("--progress", String(document_progress()));
-    }
-
     keep_active_item_visible(minimap, active_pair.item);
 }
 
@@ -407,6 +449,37 @@ function scroll_to_heading(event) {
     }
 
     const id = decodeURIComponent(href.slice(1));
+
+    if (id === "page_top") {
+        event.preventDefault();
+
+        locked_minimap_id = id;
+        programmatic_scroll = true;
+        minimap_user_scrolling = false;
+
+        minimap_items().forEach(function(other) {
+            other.classList.toggle("active", other === item);
+        });
+
+        if (matchMedia("(max-width: 760px)").matches) {
+            document.body.classList.remove("side_open");
+        }
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+        history.replaceState(null, "", location.pathname);
+
+        setTimeout(function() {
+            programmatic_scroll = false;
+            set_active_minimap_item();
+        }, 900);
+
+        return;
+    }
+
     const heading = document.getElementById(id);
 
     if (!heading) {

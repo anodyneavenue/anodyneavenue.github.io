@@ -179,7 +179,10 @@ function minimap(headings, type) {
     '      <p class="sidebar_section_title">On this page</p>',
     '      <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading, index) {
-      const marker = "&gt;".repeat(Math.max(1, heading.level - 1));
+      const marker = heading.level <= 1
+          ? ""
+          : "&gt;".repeat(heading.level - 1);
+
       const mix = Math.round((index / max_index) * 100);
 
       return [
@@ -639,7 +642,16 @@ function build_sitemap(items) {
 function build_posts(items) {
   items.forEach(function(item) {
     const prepared = prepare_body(item.body);
-    const post_minimap = minimap(prepared.headings, item.type);
+
+    const minimap_headings = [
+      {
+        level: 1,
+        id: "page_top",
+        text: item.title
+      }
+    ].concat(prepared.headings);
+
+    const post_minimap = minimap(minimap_headings, item.type);
 
     write_file(post_page(item), shell({
       title: "anodyne avenue - " + item.title,
