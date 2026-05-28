@@ -4,7 +4,7 @@ const posts = [
     slug: "hello-world",
     title: "Hello World!",
     type: "blog",
-    date: "2026-05-27",
+    date: "2026-05-28",
     // revised: "2026-05-27",
     edition: "1st edition",
     tags: ["Journal"],
