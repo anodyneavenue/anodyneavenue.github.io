@@ -28,9 +28,10 @@ _site/essays.html
 _site/guides.html
 _site/blog.html
 _site/archive.html
-_site/tags.html
+_site/tags.html        compatibility link to /metadata/tags.html
+_site/metadata.html
+_site/metadata/       public metadata field and value pages, including tags
 _site/posts/
-_site/tag/
 
 The generated _site folder is published by GitHub Actions.
 
@@ -39,8 +40,13 @@ The generated _site folder is published by GitHub Actions.
 Essays
 Guides
 Blog
-Archive
+Metadata
 Tags
+Archive
+
+Metadata is generated as a public index at `/metadata.html`, with individual field pages under `/metadata/`. Tags are part of the metadata system at `/metadata/tags.html`; the sidebar Tags link points there directly. Post-footer metadata cards link to the relevant post block on `/metadata.html`.
+
+The base metadata pages are always generated, even if there are no visible posts. This includes `/metadata/slug.html`, `/metadata/title.html`, `/metadata/type.html`, `/metadata/date.html`, `/metadata/tags.html`, `/metadata/abstract.html`, and `/metadata/word_count.html`. Empty metadata pages display `No posts yet.` instead of failing.
 
 ## Behaviour
 
@@ -98,7 +104,7 @@ Section pages show only the latest edition of a post.
 
 The archive shows all editions.
 
-Tag pages show the latest edition only.
+Tag pages are generated as metadata value pages under `/metadata/tags/` and show matching visible posts.
 
 ## Build
 
@@ -123,3 +129,14 @@ The published site comes from the generated _site folder.
 ## Copyright
 
 anodyne avenue ©
+
+## Versioning
+
+The root-level `version.txt` file stores the source version in this format:
+
+`1.X.YY.MM.DD.Increment`
+
+`X` is manually controlled. Each time `node build.js` runs, the build script preserves `X`, updates the date, increments the final number, writes the new value back to `version.txt`, and renders it visibly in the sidebar footer as `v1.X.YY.MM.DD.Increment`.
+
+Because this edits `version.txt`, commit that file after a local build if you want the version change to become the canonical repository version.
+

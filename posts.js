@@ -1,6 +1,6 @@
 const posts = [
   {
-    show: true,
+    show: false,
     slug: "hello-world",
     title: "Hello World!",
     type: "blog",
@@ -29,7 +29,46 @@ const posts = [
         '<p>If you have somehow wandered here and find yourself similarly curious and, more often than not, equally confused - or dissatisfied with shallow explanations - then perhaps some part of this archive may prove useful to you as well.</p>' +
         '<p>Thank you for reading.</p>'
   },
-    {
+  {
+    show: false,
+    slug: "to-do-list",
+    title: "To Do List",
+    type: "blog",
+    date: "2026-05-24",
+    // revised: "2026-05-26",
+    edition: "1st edition",
+    tags: ["to-do"],
+    abstract: "To Do List for this anodyne avenue",
+    body:
+        '<h2>Sidebar</h2>' +
+        '<p></p>' +
+        '<h2>Minimap</h2>' +
+        '<p>> Post title jump defaults to the title position and does not try to scroll to the top of the page when JS is disabled.</p>' +
+        '<p>> Progress bar moved to .</p>' +
+        '<h2>Sidebar</h2>' +
+        '<p></p>' +
+        '<h2>Sidebar</h2>' +
+        '<p></p>'
+
+  },
+  {
+    show: false,
+    slug: "example_post",
+    title: "Example Post",
+    type: "essays",
+    date: "2026-05-28",
+    edition: "1st edition",
+    status: "draft",
+    series: "Website notes",
+    part: 1,
+    confidence: "provisional",
+    scope: "personal note",
+    tags: ["example"],
+    abstract: "Short abstract here.",
+    body:
+        "<p>Post body here.</p>"
+  },
+  {
     show: false,
     slug: "template",
     title: "Template for a post",
@@ -75,19 +114,19 @@ const posts = [
     type: "essays",
     date: "2026-05-26",
     edition: "draft",
-    tags: ["debug"],
+    tags: ["debug", "tag 1", "tag 2", "tag 3"],
     abstract: "This will not appear.",
     body:
         '<p>This page will be built.</p>'
   },
   {
-    show: true,
+    show: false,
     slug: "long_nonsense_test",
     title: "Long Nonsense Test Post",
     type: "blog",
     date: "2026-05-26",
     edition: "draft",
-    tags: ["debug", "layout-test", "longform"],
+    tags: ["debug", "layout-test", "longform", "tag 1", "tag 2", "tag 3", "tag 4", "tag 5", "tag 6"],
     abstract: "A deliberately long nonsense post for testing spacing, scrolling, cards, archive layout, and the minimap.",
     body:
         '<p>Velmora thandric solivane perrenthia gralvok nembular fossenly trivanic yelthrope caldorin venshara morthalic dravanel quensibra haldovent prasmira lonthevik sarnival obrethic clandever.</p>' +

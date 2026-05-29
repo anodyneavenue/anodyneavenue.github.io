@@ -19,6 +19,67 @@ const out = path.join(root, "_site");
 
 const site_url = "https://anodyneavenue.github.io";
 
+const version_file = path.join(root, "version.txt");
+let current_build_version = "";
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function build_version_date() {
+  const now = new Date();
+
+  return [
+    pad2(now.getFullYear() % 100),
+    pad2(now.getMonth() + 1),
+    pad2(now.getDate())
+  ].join(".");
+}
+
+function parse_version_text(text) {
+  const match = String(text || "").trim().match(/^1\.(\d+)\.(\d{2})\.(\d{2})\.(\d{2})\.(\d+)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    minor: Number(match[1]),
+    increment: Number(match[5])
+  };
+}
+
+function next_build_version() {
+  let minor = 0;
+  let increment = 0;
+
+  if (fs.existsSync(version_file)) {
+    const parsed = parse_version_text(fs.readFileSync(version_file, "utf8"));
+
+    if (!parsed) {
+      throw new Error("version.txt must use the format 1.X.YY.MM.DD.Increment, for example 1.0.26.05.29.12");
+    }
+
+    minor = parsed.minor;
+    increment = parsed.increment;
+  }
+
+  return "1." + minor + "." + build_version_date() + "." + (increment + 1);
+}
+
+function write_version_file(version) {
+  fs.writeFileSync(version_file, version + "\n", "utf8");
+}
+
+function version_footer_html() {
+  if (!current_build_version) {
+    return "";
+  }
+
+  return '<span class="site_version">v' + escape_html(current_build_version) + '</span>';
+}
+
+
 function shown_posts() {
   return posts.filter(function(item) {
     return item.show === true;
@@ -177,7 +238,8 @@ function minimap(headings, type) {
   return [
     '    <section class="sidebar_minimap map_' + escape_html(type) + '" aria-label="On this page">',
     '      <p class="sidebar_section_title">On this page</p>',
-    '      <nav class="minimap" aria-label="Post sections">',
+    '      <div class="minimap_shell">',
+    '        <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading, index) {
       const marker = heading.level <= 1
           ? ""
@@ -185,14 +247,19 @@ function minimap(headings, type) {
 
       const mix = Math.round((index / max_index) * 100);
 
+      const scroll_top = heading.scroll_top
+          ? ' data-scroll-top="true"'
+          : "";
+
       return [
-        '        <a class="minimap_item minimap_h' + heading.level + '" style="--map-mix: ' + mix + '%;" href="#' + escape_html(heading.id) + '">',
+        '        <a class="minimap_item minimap_h' + heading.level + '" style="--map-mix: ' + mix + '%;" href="#' + escape_html(heading.id) + '"' + scroll_top + ">",
         '          <span class="minimap_marker" aria-hidden="true">' + marker + "</span>",
         '          <span class="minimap_text" data-text="' + escape_html(heading.text) + '"><span class="minimap_label">' + escape_html(heading.text) + "</span></span>",
         "        </a>"
       ].join("\n");
     }).join("\n"),
-    "      </nav>",
+    "        </nav>",
+    "      </div>",
     "    </section>"
   ].join("\n");
 }
@@ -206,27 +273,60 @@ function post_page(item) {
 }
 
 function tag_page(tag) {
-  return "tag/" + tag_slug(tag) + ".html";
+  return "metadata/tags/" + tag_slug(tag) + ".html";
 }
 
 function linked_kicker(label, href) {
   return '<p class="kicker"><a href="' + escape_html(href) + '">' + escape_html(label) + '</a></p>';
 }
 
+function breadcrumb_kicker(parts) {
+  return '<p class="kicker breadcrumb_kicker">' + parts.map(function(part) {
+    return '<a href="' + escape_html(part.href) + '">' + escape_html(part.label) + '</a>';
+  }).join(' / ') + '</p>';
+}
+
 function site_kicker() {
-  return linked_kicker("anodyne avenue", "/");
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" }
+  ]);
 }
 
 function plain_site_kicker() {
-  return '<p class="kicker">anodyne avenue</p>';
+  return '<p class="kicker">ANODYNE AVENUE</p>';
 }
 
 function section_kicker(type) {
-  return linked_kicker(labels[type], "/" + page_for_type(type));
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: labels[type].toUpperCase(), href: "/" + page_for_type(type) }
+  ]);
 }
 
-function tags_kicker() {
-  return linked_kicker("tag", "/tags.html");
+function archive_kicker() {
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: "ARCHIVE", href: "/archive.html" }
+  ]);
+}
+
+function metadata_kicker() {
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: "METADATA", href: "/metadata.html" }
+  ]);
+}
+
+function metadata_field_kicker(field) {
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: "METADATA", href: "/metadata.html" },
+    { label: field.label.toUpperCase(), href: "/" + metadata_field_page(field) }
+  ]);
+}
+
+function post_metadata_anchor(item) {
+  return "post_metadata_" + slug_text(item.slug || item.title);
 }
 
 function meta(item) {
@@ -241,6 +341,459 @@ function meta(item) {
   }
 
   return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
+
+function humanise_meta_key(key) {
+  return String(key || "")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^./, function(char) {
+        return char.toUpperCase();
+      });
+}
+
+function metadata_value_empty(value) {
+  if (value === null || value === undefined) {
+    return true;
+  }
+
+  if (typeof value === "string") {
+    return value.trim() === "";
+  }
+
+  if (Array.isArray(value)) {
+    return value.length === 0;
+  }
+
+  if (typeof value === "object") {
+    return Object.keys(value).length === 0;
+  }
+
+  return false;
+}
+
+function metadata_value_text(value) {
+  if (Array.isArray(value)) {
+    return value.map(metadata_value_text).filter(Boolean).join(", ");
+  }
+
+  if (value && typeof value === "object") {
+    return Object.keys(value).map(function(key) {
+      return humanise_meta_key(key) + ": " + metadata_value_text(value[key]);
+    }).filter(Boolean).join(" · ");
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  return String(value || "");
+}
+
+const footer_metadata_excluded_keys = new Set([
+  "show",
+  "slug",
+  "title",
+  "type",
+  "date",
+  "revised",
+  "tags",
+  "abstract",
+  "body"
+]);
+
+const page_metadata_excluded_keys = new Set([
+  "show",
+  "body"
+]);
+
+const primary_metadata_order = [
+  "slug",
+  "title",
+  "type",
+  "date",
+  "tags",
+  "abstract",
+  "word_count"
+];
+
+function primary_metadata_rank(key) {
+  const index = primary_metadata_order.indexOf(key);
+
+  if (index >= 0) {
+    return index;
+  }
+
+  return primary_metadata_order.length;
+}
+
+function metadata_field_entry(item, key, value, derived) {
+  return {
+    key: key,
+    label: humanise_meta_key(key),
+    value: value,
+    text: metadata_value_text(value),
+    derived: derived === true
+  };
+}
+
+function post_footer_metadata_fields(item) {
+  return Object.keys(item)
+      .filter(function(key) {
+        return !footer_metadata_excluded_keys.has(key) && !metadata_value_empty(item[key]);
+      })
+      .map(function(key) {
+        return metadata_field_entry(item, key, item[key], false);
+      });
+}
+
+function public_metadata_fields(item) {
+  const fields = [];
+
+  primary_metadata_order.forEach(function(key) {
+    if (key === "word_count") {
+      fields.push(metadata_field_entry(item, key, word_count_label(item), true));
+      return;
+    }
+
+    if (
+        Object.prototype.hasOwnProperty.call(item, key) &&
+        !page_metadata_excluded_keys.has(key) &&
+        !metadata_value_empty(item[key])
+    ) {
+      fields.push(metadata_field_entry(item, key, item[key], false));
+    }
+  });
+
+  Object.keys(item)
+      .filter(function(key) {
+        return (
+          primary_metadata_order.indexOf(key) < 0 &&
+          !page_metadata_excluded_keys.has(key) &&
+          !metadata_value_empty(item[key])
+        );
+      })
+      .sort(function(a, b) {
+        return humanise_meta_key(a).localeCompare(humanise_meta_key(b));
+      })
+      .forEach(function(key) {
+        fields.push(metadata_field_entry(item, key, item[key], false));
+      });
+
+  return fields;
+}
+
+function metadata_value_entries(value) {
+  if (Array.isArray(value)) {
+    return value.map(metadata_value_text).filter(Boolean);
+  }
+
+  const text = metadata_value_text(value);
+  return text ? [text] : [];
+}
+
+function metadata_field_slug(key) {
+  return slug_text(key) || "metadata";
+}
+
+function metadata_field_page(field) {
+  return "metadata/" + field.slug + ".html";
+}
+
+function metadata_value_slug(value) {
+  return slug_text(value.value) || "value";
+}
+
+function metadata_field_value_page(field, value) {
+  return "metadata/" + field.slug + "/" + metadata_value_slug(value) + ".html";
+}
+
+function metadata_value_key(value) {
+  return String(value || "").toLowerCase();
+}
+
+function make_empty_metadata_field(key) {
+  return {
+    key: key,
+    label: humanise_meta_key(key),
+    slug: metadata_field_slug(key),
+    derived: key === "word_count",
+    posts: [],
+    values: new Map()
+  };
+}
+
+function all_metadata_fields(items) {
+  const fields = new Map();
+
+  primary_metadata_order.forEach(function(key) {
+    fields.set(key, make_empty_metadata_field(key));
+  });
+
+  items.forEach(function(item) {
+    public_metadata_fields(item).forEach(function(entry) {
+      if (!fields.has(entry.key)) {
+        fields.set(entry.key, {
+          key: entry.key,
+          label: entry.label,
+          slug: metadata_field_slug(entry.key),
+          derived: entry.derived === true,
+          posts: [],
+          values: new Map()
+        });
+      }
+
+      const field = fields.get(entry.key);
+      field.posts.push(item);
+
+      metadata_value_entries(entry.value).forEach(function(value) {
+        const key = metadata_value_key(value);
+
+        if (!field.values.has(key)) {
+          field.values.set(key, {
+            value: value,
+            posts: []
+          });
+        }
+
+        field.values.get(key).posts.push(item);
+      });
+    });
+  });
+
+  return [...fields.values()].sort(function(a, b) {
+    const rank_difference = primary_metadata_rank(a.key) - primary_metadata_rank(b.key);
+
+    if (rank_difference !== 0) {
+      return rank_difference;
+    }
+
+    return a.label.localeCompare(b.label);
+  });
+}
+
+function metadata_post_count_label(count) {
+  if (count === 1) {
+    return "1 post";
+  }
+
+  return count + " posts";
+}
+
+function metadata_value_count_label(count) {
+  if (count === 1) {
+    return "1 value";
+  }
+
+  return count + " values";
+}
+
+function metadata_latest_date(items) {
+  const latest = sort_by_date(items)[0];
+
+  if (!latest) {
+    return "";
+  }
+
+  return latest.date;
+}
+
+function metadata_field_meta(field) {
+  const latest = metadata_latest_date(field.posts);
+  const parts = [
+    metadata_post_count_label(field.posts.length),
+    metadata_value_count_label(field.values.size)
+  ];
+
+  if (latest) {
+    parts.push("latest " + latest);
+  }
+
+  if (field.derived) {
+    parts.push("derived");
+  }
+
+  return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
+function metadata_field_card(field) {
+  return [
+    '        <a class="tag_card metadata_card" href="/' + escape_html(metadata_field_page(field)) + '">',
+    "          <small>" + metadata_field_meta(field) + "</small>",
+    "          <span>" + escape_html(field.label) + "</span>",
+    "        </a>"
+  ].join("\n");
+}
+
+function metadata_field_index(fields) {
+  if (!fields.length) {
+    return '      <p class="muted">No metadata yet.</p>';
+  }
+
+  return [
+    '      <section class="tag_index metadata_index" id="metadata_index">',
+    fields.map(metadata_field_card).join("\n"),
+    "      </section>"
+  ].join("\n");
+}
+
+function metadata_value_meta(value) {
+  const posts = sort_by_date(value.posts);
+  const latest = metadata_latest_date(posts);
+  const parts = [
+    metadata_post_count_label(posts.length)
+  ];
+
+  if (latest) {
+    parts.push("latest " + latest);
+  }
+
+  return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
+function metadata_value_card(field, value) {
+  return [
+    '        <a class="tag_card metadata_value_card metadata_value_card_link" href="/' + escape_html(metadata_field_value_page(field, value)) + '">',
+    "          <small>" + metadata_value_meta(value) + "</small>",
+    "          <span>" + escape_html(value.value) + "</span>",
+    "        </a>"
+  ].join("\n");
+}
+
+function metadata_field_values(field) {
+  return [...field.values.values()].sort(function(a, b) {
+    const post_difference = b.posts.length - a.posts.length;
+
+    if (post_difference !== 0) {
+      return post_difference;
+    }
+
+    return a.value.localeCompare(b.value);
+  });
+}
+
+function metadata_field_section(field) {
+  const values = metadata_field_values(field);
+  const value_html = values.length
+      ? values.map(function(value) {
+        return metadata_value_card(field, value);
+      }).join("\n")
+      : '        <p class="muted">No posts yet.</p>';
+
+  return [
+    '      <section class="metadata_group" id="metadata_' + escape_html(field.slug) + '">',
+    "        <h2>Values</h2>",
+    '        <p class="muted metadata_group_meta">' + metadata_field_meta(field) + "</p>",
+    '        <section class="tag_index metadata_value_index">',
+    value_html,
+    "        </section>",
+    "      </section>"
+  ].join("\n");
+}
+
+function metadata_value_page_content(field, value) {
+  const posts = sort_by_date(value.posts);
+
+  return [
+    '      ' + metadata_field_kicker(field),
+    "      <h1>" + escape_html(value.value) + "</h1>",
+    '      <p class="muted intro">' + metadata_value_meta(value) + "</p>",
+    "",
+    posts.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
+  ].join("\n");
+}
+
+const by_post_metadata_excluded_keys = new Set([
+  "show",
+  "body",
+  "title",
+  "date",
+  "revised",
+  "type",
+  "slug",
+  "word_count"
+]);
+
+/*
+  By post follows the same metadata ordering as the metadata index after the
+  card heading has already carried title/date/type/word count: tags first,
+  then abstract, then remaining additional fields in their normal order.
+*/
+function by_post_metadata_fields(item) {
+  return public_metadata_fields(item)
+      .filter(function(field) {
+        return !by_post_metadata_excluded_keys.has(field.key);
+      });
+}
+
+function metadata_post_value_html(field) {
+  if (field.key === "type" && labels[field.value]) {
+    return escape_html(labels[field.value]);
+  }
+
+  return escape_html(field.text);
+}
+
+function metadata_post_card(item) {
+  const fields = by_post_metadata_fields(item);
+
+  return [
+    '        <article class="metadata_post_entry" id="' + escape_html(post_metadata_anchor(item)) + '">',
+    '          <a class="tag_card metadata_post_card" href="/' + post_page(item) + '">',
+    "            <small>" + meta(item) + "</small>",
+    '            <span class="metadata_post_title">' + escape_html(item.title) + "</span>",
+    fields.length ? '            <dl class="post_meta_list metadata_post_list">' : '',
+    fields.map(function(field) {
+      return [
+        '              <div class="post_meta_item metadata_post_row">',
+        "                <dt>" + escape_html(field.label) + "</dt>",
+        "                <dd>" + metadata_post_value_html(field) + "</dd>",
+        "              </div>"
+      ].join("\n");
+    }).join("\n"),
+    fields.length ? "            </dl>" : '',
+    "          </a>",
+    "        </article>"
+  ].filter(function(line) {
+    return line !== "";
+  }).join("\n");
+}
+
+function metadata_post_index(items) {
+  return [
+    '      <section class="metadata_posts">',
+    sort_by_date(items).map(metadata_post_card).join("\n"),
+    "      </section>"
+  ].join("\n");
+}
+
+function post_footer_metadata(item) {
+  const rows = post_footer_metadata_fields(item).map(function(field) {
+    return [
+      '            <div class="post_meta_item">',
+      "              <dt>" + escape_html(field.label) + "</dt>",
+      "              <dd>" + escape_html(field.text) + "</dd>",
+      "            </div>"
+    ].join("\n");
+  });
+
+  if (!rows.length) {
+    return "";
+  }
+
+  return [
+    '      <footer class="post_meta_footer" aria-label="Post metadata">',
+    '        <a class="post_meta_card" href="/metadata.html#' + escape_html(post_metadata_anchor(item)) + '">',
+    '          <span class="post_meta_card_label">Metadata</span>',
+    '          <dl class="post_meta_list">',
+    rows.join("\n"),
+    "          </dl>",
+    "        </a>",
+    "      </footer>"
+  ].join("\n");
 }
 
 function tag_links(item) {
@@ -281,13 +834,13 @@ function sidebar(extra_html) {
     '      <a href="/essays.html">Essays</a>',
     '      <a href="/guides.html">Guides</a>',
     '      <a href="/blog.html">Blog</a>',
-    '      <a href="/tags.html">Tags</a>',
+    '      <a href="/metadata/tags.html">Tags</a>',
     '      <a href="/archive.html">Archive</a>',
     "    </nav>",
     "",
     extra_html || "",
     "",
-    "    <footer>anodyne avenue ©</footer>",
+    "    <footer><span>anodyne avenue ©</span>" + version_footer_html() + "</footer>",
     "  </aside>"
   ].filter(function(line) {
     return line !== "";
@@ -297,6 +850,7 @@ function sidebar(extra_html) {
 function shell(options) {
   const title = options.title;
   const description = options.description || "";
+  const robots = options.robots || "";
   const back = options.back || false;
   const content = options.content;
   const minimap_html = options.minimap || "";
@@ -310,6 +864,7 @@ function shell(options) {
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     "  <title>" + escape_html(title) + "</title>",
     description ? '  <meta name="description" content="' + escape_html(description) + '">' : "",
+    robots ? '  <meta name="robots" content="' + escape_html(robots) + '">' : "",
     '  <link rel="stylesheet" href="/style.css">',
     '  <script src="/sidebar.js" defer></script>',
     minimap_script,
@@ -524,7 +1079,7 @@ function build_home(items) {
     back: true,
     content: [
       '      ' + plain_site_kicker(),
-      "      <h1>Deep dives into niche topics of interest.</h1>",
+      "      <h1>Deep dives into topics of interest.</h1>",
       '      <p class="muted intro">An anonymous <a href="/archive.html">archive</a> of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b></p>',
       "",
       "      <h2>Latest</h2>",
@@ -544,7 +1099,7 @@ function build_sections(items) {
       description: intros[type],
       back: true,
       content: [
-        '      ' + site_kicker(),
+        '      ' + section_kicker(type),
         "      <h1>" + labels[type] + "</h1>",
         '      <p class="muted intro">' + escape_html(intros[type]) + "</p>",
         "",
@@ -560,7 +1115,7 @@ function build_archive(items) {
     description: "All published posts, ordered by date from newest to oldest.",
     back: true,
     content: [
-      '      ' + site_kicker(),
+      '      ' + archive_kicker(),
       "      <h1>Archive</h1>",
       '      <p class="muted intro">All published posts, ordered by date from newest to oldest.</p>',
       "",
@@ -580,7 +1135,7 @@ function build_404() {
       '      <p class="muted intro">The page you were looking for does not exist, may have moved, or may never have been written.</p>',
       "",
       '      <section class="tag_index">',
-      '        <a class="tag_card" href="/tags.html">',
+      '        <a class="tag_card" href="/metadata/tags.html">',
       "          <small>A subject index for the archive.</small>",
       "          <span>Tags</span>",
       "        </a>",
@@ -609,9 +1164,7 @@ function sitemap_entry(file, lastmod) {
 }
 
 function build_sitemap(items) {
-  const latest_posts = latest_by_title(items);
-  const tags = all_tags(latest_posts);
-
+  const fields = all_metadata_fields(items);
   const entries = [];
 
   entries.push(sitemap_entry("index.html"));
@@ -621,177 +1174,212 @@ function build_sitemap(items) {
   });
 
   entries.push(sitemap_entry("archive.html"));
+  entries.push(sitemap_entry("metadata.html"));
   entries.push(sitemap_entry("tags.html"));
+
+  fields.forEach(function(field) {
+    entries.push(sitemap_entry(metadata_field_page(field), metadata_latest_date(field.posts)));
+
+    metadata_field_values(field).forEach(function(value) {
+      entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
+    });
+  });
 
   sort_by_date(items).forEach(function(item) {
     entries.push(sitemap_entry(post_page(item), item.revised || item.date));
   });
 
-  sort_tags_alphabetically(tags).forEach(function(tag) {
-    entries.push(sitemap_entry("tag/" + tag.slug + ".html", tag_latest_date(tag)));
-  });
-
-  write_file("sitemap.xml", [
+  const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     entries.join("\n"),
     "</urlset>"
-  ].join("\n"));
+  ].join("\n");
+
+  write_file("sitemap.xml", xml);
+}
+
+function open_graph_meta(item) {
+  const title = item
+      ? item.title + " - anodyne avenue"
+      : "anodyne avenue";
+
+  const description = item
+      ? item.abstract
+      : "An anonymous, text-first archive of essays, guides, and blog posts.";
+
+  const url = item
+      ? absolute_url(post_page(item))
+      : absolute_url("index.html");
+
+  return [
+    '  <meta property="og:type" content="' + (item ? "article" : "website") + '">',
+    '  <meta property="og:title" content="' + escape_html(title) + '">',
+    '  <meta property="og:description" content="' + escape_html(description) + '">',
+    '  <meta property="og:url" content="' + escape_html(url) + '">',
+    '  <meta property="og:site_name" content="anodyne avenue">',
+    '  <meta name="twitter:card" content="summary">'
+  ].join("\n");
+}
+
+function build_metadata_page(items) {
+  const fields = all_metadata_fields(items);
+
+  write_file("metadata.html", shell({
+    title: "anodyne avenue - metadata",
+    description: "A public index of post metadata across the archive.",
+    back: true,
+    content: [
+      '      ' + metadata_kicker(),
+      "      <h1>Metadata</h1>",
+      '      <p class="muted intro">A public index of post metadata across the archive: fields, values, counts, and the posts attached to them.</p>',
+      "",
+      metadata_field_index(fields),
+      "",
+      "      <h2>By post</h2>",
+      '      <p class="muted metadata_group_meta">Each visible post and its public metadata, excluding the post body.</p>',
+      metadata_post_index(items)
+    ].join("\n")
+  }));
+
+  fields.forEach(function(field) {
+    write_file(metadata_field_page(field), shell({
+      title: field.label.toLowerCase() + " metadata - anodyne avenue",
+      description: "Metadata values for " + field.label + ".",
+      back: true,
+      content: [
+        '      ' + metadata_field_kicker(field),
+        "      <h1>" + escape_html(field.label) + "</h1>",
+        '      <p class="muted intro">' + metadata_field_meta(field) + "</p>",
+        "",
+        metadata_field_section(field)
+      ].join("\n")
+    }));
+
+    metadata_field_values(field).forEach(function(value) {
+      write_file(metadata_field_value_page(field, value), shell({
+        title: value.value + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
+        description: "Posts using " + field.label + ": " + value.value + ".",
+          back: true,
+        content: metadata_value_page_content(field, value)
+      }));
+    });
+  });
+}
+
+function build_tags_page(items) {
+  const fields = all_metadata_fields(items);
+  const tags_field = fields.find(function(field) {
+    return field.key === "tags";
+  });
+
+  const canonical = tags_field
+      ? "/" + metadata_field_page(tags_field)
+      : "/metadata.html";
+
+  write_file("tags.html", shell({
+    title: "anodyne avenue - tags",
+    description: "Tags are part of the public metadata index.",
+    back: true,
+    content: [
+      '      ' + metadata_kicker(),
+      "      <h1>Tags</h1>",
+      '      <p class="muted intro">Tags are now part of the metadata index.</p>',
+      "",
+      '      <section class="tag_index">',
+      '        <a class="tag_card" href="' + escape_html(canonical) + '">',
+      "          <small>canonical metadata page</small>",
+      "          <span>Open tags</span>",
+      "        </a>",
+      "      </section>"
+    ].join("\n")
+  }));
+}
+
+function build_tag_pages(items) {
+  /*
+    Tags are now generated as normal metadata value pages under
+    /metadata/tags/. This function remains as a no-op so older build flow
+    names stay understandable.
+  */
+}
+
+function post_headings(item, prepared) {
+  return [
+    {
+      level: 1,
+      id: "post_title",
+      text: item.title,
+      scroll_top: true
+    }
+  ].concat(prepared.headings);
 }
 
 function build_posts(items) {
   items.forEach(function(item) {
     const prepared = prepare_body(item.body);
-
-    const minimap_headings = [
-      {
-        level: 1,
-        id: "page_top",
-        text: item.title
-      }
-    ].concat(prepared.headings);
-
-    const post_minimap = minimap(minimap_headings, item.type);
+    const headings = post_headings(item, prepared);
 
     write_file(post_page(item), shell({
-      title: "anodyne avenue - " + item.title,
+      title: item.title + " - anodyne avenue",
       description: item.abstract,
       back: true,
-      minimap: post_minimap,
+      minimap: minimap(headings, item.type),
       content: [
-        '      <article class="post">',
-        '        ' + section_kicker(item.type),
-        "        <small>" + meta(item) + "</small>",
-        "",
-        "        <h1>" + escape_html(item.title) + "</h1>",
-        "",
-        '        <p class="abstract"><strong>Abstract:</strong> ' + escape_html(item.abstract) + "</p>",
-        "",
+        '    <article class="post">',
+        '      ' + section_kicker(item.type),
+        '      <header>',
+        '        <h1 id="post_title">' + escape_html(item.title) + "</h1>",
+        "        <p><small>" + meta(item) + "</small></p>",
+        '        <p class="abstract">' + escape_html(item.abstract) + "</p>",
         tag_links(item),
+        "      </header>",
         "",
-        '        <div class="body">',
-        "          " + prepared.html,
-        "        </div>",
+        '      <section class="body">',
+        prepared.html,
+        "      </section>",
         "",
-        "        <footer>anodyne avenue ©</footer>",
-        "      </article>"
+        post_footer_metadata(item),
+        "    </article>"
       ].join("\n")
     }));
   });
-}
-
-function build_tags(items) {
-  const visible_posts = latest_by_title(items);
-  const tags = all_tags(visible_posts);
-
-  write_file("tags.html", shell({
-    title: "anodyne avenue - tags",
-    description: "A subject index for the archive.",
-    back: true,
-    content: [
-      '      ' + site_kicker(),
-      "      <h1>Tags</h1>",
-      '      <p class="muted intro">A subject index for the archive. Tags group posts by recurring themes, methods, questions, and areas of interest.</p>',
-      "",
-      tag_index(tags)
-    ].join("\n")
-  }));
-
-  sort_tags_alphabetically(tags).forEach(function(tag) {
-    write_file("tag/" + tag.slug + ".html", shell({
-      title: "anodyne avenue - " + tag.name,
-      description: "Posts filed under " + tag.name + ".",
-      back: true,
-      content: [
-        '      ' + tags_kicker(),
-        "      <h1>" + escape_html(tag.name) + "</h1>",
-        '      <p class="muted intro">Posts filed under this tag, ordered from newest to oldest.</p>',
-        "",
-        sort_by_date(tag.posts).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
-      ].join("\n")
-    }));
-  });
-}
-
-function build_robots() {
-  write_file("robots.txt", [
-    "# anodyne avenue robots.txt",
-    "# Allows ordinary indexing, but opts out of major AI training / AI data crawlers.",
-    "",
-    "User-agent: *",
-    "Allow: /",
-    "",
-    "Sitemap: https://anodyneavenue.github.io/sitemap.xml",
-    "",
-    "User-agent: GPTBot",
-    "Disallow: /",
-    "",
-    "User-agent: ClaudeBot",
-    "Disallow: /",
-    "",
-    "User-agent: Google-Extended",
-    "Disallow: /",
-    "",
-    "User-agent: Applebot-Extended",
-    "Disallow: /",
-    "",
-    "User-agent: CCBot",
-    "Disallow: /",
-    "",
-    "User-agent: PerplexityBot",
-    "Disallow: /",
-    "",
-    "User-agent: Meta-ExternalAgent",
-    "Disallow: /",
-    "",
-    "User-agent: Bytespider",
-    "Disallow: /",
-    "",
-    "User-agent: anthropic-ai",
-    "Disallow: /",
-    "",
-    "User-agent: Claude-SearchBot",
-    "Disallow: /",
-    "",
-    "User-agent: Claude-User",
-    "Disallow: /",
-    "",
-    "User-agent: ChatGPT-User",
-    "Disallow: /",
-    "",
-    "User-agent: OAI-SearchBot",
-    "Disallow: /"
-  ].join("\n") + "\n");
 }
 
 function build() {
-  const visible_posts = shown_posts();
+  const visible = shown_posts();
 
-  validate_posts(visible_posts);
+  validate_posts(visible);
+
+  current_build_version = next_build_version();
+  write_version_file(current_build_version);
 
   if (fs.existsSync(out)) {
-    fs.rmSync(out, { recursive: true, force: true });
+    fs.rmSync(out, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 200
+    });
   }
 
   fs.mkdirSync(out, { recursive: true });
+  fs.mkdirSync(path.join(out, "posts"), { recursive: true });
+  fs.mkdirSync(path.join(out, "metadata"), { recursive: true });
 
-  build_home(visible_posts);
-  build_sections(visible_posts);
-  build_archive(visible_posts);
-  build_tags(visible_posts);
+  build_home(visible);
+  build_sections(visible);
+  build_archive(visible);
+  build_metadata_page(visible);
+  build_tags_page(visible);
+  build_tag_pages(visible);
+  build_posts(visible);
   build_404();
-  build_posts(visible_posts);
-  build_sitemap(visible_posts);
-  build_robots();
+  build_sitemap(visible);
 
   copy_file("style.css");
   copy_file("sidebar.js");
-
-  if (fs.existsSync(path.join(root, "minimap.js"))) {
-    copy_file("minimap.js");
-  }
-
-  write_file(".nojekyll", "");
+  copy_file("minimap.js");
 }
 
 build();
