@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const katex = require("katex");
 const posts = require("./posts.js");
 
 const labels = {
@@ -103,6 +104,90 @@ function escape_xml(value) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&apos;");
+}
+
+
+const global_math_macros = {
+  "\\dd": "\\,\\mathrm{d}",
+  "\\pd": "\\partial",
+  "\\E": "\\vec{E}",
+  "\\B": "\\vec{B}",
+  "\\ket": "\\left|#1\\right\\rangle",
+  "\\bra": "\\left\\langle#1\\right|",
+  "\\braket": "\\left\\langle#1\\middle|#2\\right\\rangle"
+};
+
+function decode_attr(value) {
+  return String(value || "")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#34;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&apos;", "'")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&amp;", "&");
+}
+
+function math_macros_for_post(item) {
+  return Object.assign({}, global_math_macros, item.math_macros || {});
+}
+
+function math_placeholders_present(html) {
+  return String(html || "").includes("math_source");
+}
+
+function post_uses_math(item) {
+  return item.uses_math === true || math_placeholders_present(item.body);
+}
+
+function render_katex(tex, display_mode, item, label) {
+  try {
+    return katex.renderToString(tex, {
+      displayMode: display_mode,
+      throwOnError: item.allow_math_errors === true ? false : true,
+      macros: math_macros_for_post(item)
+    });
+  } catch (error) {
+    const context = [
+      "Math render error in post: " + (item.title || item.slug || "unknown post"),
+      label ? "Equation label: " + label : "Equation label: none",
+      "TeX:",
+      tex,
+      "KaTeX error:",
+      error.message
+    ].join("\n");
+
+    throw new Error(context);
+  }
+}
+
+function render_inline_math(match, tex_attr) {
+  const tex = decode_attr(tex_attr);
+  const item = render_inline_math.current_item;
+  return '<span class="math_inline">' + render_katex(tex, false, item, "") + '</span>';
+}
+
+function render_display_math(match, tex_attr, label_attr) {
+  const tex = decode_attr(tex_attr);
+  const label = decode_attr(label_attr || "");
+  const item = render_display_math.current_item;
+  const rendered = render_katex(tex, true, item, label);
+
+  return [
+    '<figure class="equation">',
+    '  <div class="equation_body">' + rendered + '</div>',
+    label ? '  <figcaption class="equation_label">' + escape_html(label) + '</figcaption>' : '',
+    '</figure>'
+  ].filter(Boolean).join("\n");
+}
+
+function render_math_placeholders(html, item) {
+  render_inline_math.current_item = item;
+  render_display_math.current_item = item;
+
+  return String(html || "")
+      .replace(/<span class="math_source math_inline_source" data-tex="([^"]*)"><\/span>/g, render_inline_math)
+      .replace(/<figure class="math_source math_display_source" data-tex="([^"]*)" data-label="([^"]*)"><\/figure>/g, render_display_math);
 }
 
 function absolute_url(file) {
@@ -267,7 +352,7 @@ function minimap(headings, type) {
 }
 
 function page_for_type(type) {
-  return type + ".html";
+  return "metadata/type/" + slug_text(type) + ".html";
 }
 
 function post_page(item) {
@@ -305,6 +390,7 @@ function plain_site_kicker() {
 function section_kicker(type) {
   return breadcrumb_kicker([
     { label: "ANODYNE AVENUE", href: "/" },
+    { label: "...", href: "/metadata/type.html" },
     { label: labels[type].toUpperCase() }
   ]);
 }
@@ -312,6 +398,7 @@ function section_kicker(type) {
 function post_kicker(type) {
   return '<p class="kicker breadcrumb_kicker">' +
       '<a href="/">ANODYNE AVENUE</a> / ' +
+      '<a href="/metadata/type.html">...</a> / ' +
       '<a href="/' + escape_html(page_for_type(type)) + '">' + escape_html(labels[type].toUpperCase()) + '</a> /' +
       '</p>';
 }
@@ -431,12 +518,18 @@ const footer_metadata_excluded_keys = new Set([
   "revised",
   "tags",
   "abstract",
-  "body"
+  "body",
+  "uses_math",
+  "math_macros",
+  "allow_math_errors"
 ]);
 
 const page_metadata_excluded_keys = new Set([
   "show",
-  "body"
+  "body",
+  "uses_math",
+  "math_macros",
+  "allow_math_errors"
 ]);
 
 const primary_metadata_order = [
@@ -454,6 +547,87 @@ const date_metadata_keys = new Set([
   "date",
   "revised"
 ]);
+
+const default_metadata_field_policy = {
+  generate_value_pages: true,
+  value_link_mode: "metadata"
+};
+
+const metadata_field_policy = {
+  slug: {
+    generate_value_pages: false,
+    value_link_mode: "post"
+  },
+  type: {
+    generate_value_pages: false,
+    value_link_mode: "section"
+  },
+  tags: {
+    description: "Subject labels for browsing related posts across the archive."
+  },
+  abstract: {
+    generate_value_pages: false,
+    value_link_mode: "post"
+  },
+  word_count: {
+    generate_value_pages: false,
+    value_link_mode: "none"
+  }
+};
+
+function metadata_policy_for_field(field) {
+  return Object.assign(
+      {},
+      default_metadata_field_policy,
+      metadata_field_policy[field.key] || {}
+  );
+}
+
+function should_generate_metadata_value_page(field) {
+  return metadata_policy_for_field(field).generate_value_pages === true;
+}
+
+function metadata_value_label(field, value) {
+  if (field.key === "type" && labels[value.value]) {
+    return labels[value.value];
+  }
+
+  return value.value;
+}
+
+function metadata_value_href(field, value) {
+  const policy = metadata_policy_for_field(field);
+
+  if (policy.value_link_mode === "metadata") {
+    if (should_generate_metadata_value_page(field)) {
+      return "/" + metadata_field_value_page(field, value);
+    }
+
+    return "";
+  }
+
+  if (policy.value_link_mode === "section") {
+    if (labels[value.value]) {
+      return "/" + page_for_type(value.value);
+    }
+
+    return "";
+  }
+
+  if (policy.value_link_mode === "post") {
+    if (value.posts.length === 1) {
+      return "/" + post_page(value.posts[0]);
+    }
+
+    if (should_generate_metadata_value_page(field)) {
+      return "/" + metadata_field_value_page(field, value);
+    }
+
+    return "";
+  }
+
+  return "";
+}
 
 function primary_metadata_rank(key) {
   const index = primary_metadata_order.indexOf(key);
@@ -678,6 +852,21 @@ function metadata_field_meta(field) {
   return parts.filter(Boolean).map(escape_html).join(" · ");
 }
 
+function metadata_field_description(field) {
+  return metadata_policy_for_field(field).description || "";
+}
+
+function metadata_field_intro(field) {
+  const description = metadata_field_description(field);
+  const meta = metadata_field_meta(field);
+
+  if (description) {
+    return '      <p class="muted intro">' + escape_html(description) + '<br><small>' + meta + '</small></p>';
+  }
+
+  return '      <p class="muted intro">' + meta + '</p>';
+}
+
 function metadata_field_card(field) {
   return [
     '        <a class="tag_card metadata_card" href="/' + escape_html(metadata_field_page(field)) + '">',
@@ -714,11 +903,23 @@ function metadata_value_meta(value) {
 }
 
 function metadata_value_card(field, value) {
+  const href = metadata_value_href(field, value);
+  const label = metadata_value_label(field, value);
+
+  if (href) {
+    return [
+      '        <a class="tag_card metadata_value_card metadata_value_card_link" href="' + escape_html(href) + '">',
+      "          <small>" + metadata_value_meta(value) + "</small>",
+      "          <span>" + escape_html(label) + "</span>",
+      "        </a>"
+    ].join("\n");
+  }
+
   return [
-    '        <a class="tag_card metadata_value_card metadata_value_card_link" href="/' + escape_html(metadata_field_value_page(field, value)) + '">',
+    '        <div class="tag_card metadata_value_card metadata_value_card_static">',
     "          <small>" + metadata_value_meta(value) + "</small>",
-    "          <span>" + escape_html(value.value) + "</span>",
-    "        </a>"
+    "          <span>" + escape_html(label) + "</span>",
+    "        </div>"
   ].join("\n");
 }
 
@@ -770,10 +971,11 @@ function metadata_field_section(field) {
 
 function metadata_value_page_content(field, value) {
   const posts = sort_by_date(value.posts);
+  const label = metadata_value_label(field, value);
 
   return [
     '      ' + metadata_value_kicker(field, value),
-    "      <h1>" + escape_html(value.value) + "</h1>",
+    "      <h1>" + escape_html(label) + "</h1>",
     '      <p class="muted intro">' + metadata_value_meta(value) + "</p>",
     "",
     posts.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
@@ -783,6 +985,9 @@ function metadata_value_page_content(field, value) {
 const by_post_metadata_excluded_keys = new Set([
   "show",
   "body",
+  "uses_math",
+  "math_macros",
+  "allow_math_errors",
   "title",
   "date",
   "revised",
@@ -906,9 +1111,9 @@ function sidebar(extra_html) {
     "",
     '    <nav class="sidebar_nav" aria-label="Main sections">',
     '      <a href="/about.html">About</a>',
-    '      <a href="/essays.html">Essays</a>',
-    '      <a href="/guides.html">Guides</a>',
-    '      <a href="/blog.html">Blog</a>',
+    '      <a href="/' + page_for_type("essays") + '">Essays</a>',
+    '      <a href="/' + page_for_type("guides") + '">Guides</a>',
+    '      <a href="/' + page_for_type("blog") + '">Blog</a>',
     '      <a href="/metadata/tags.html">Tags</a>',
     '      <a href="/archive.html">Archive</a>',
     "    </nav>",
@@ -981,6 +1186,7 @@ function shell(options) {
   const minimap_html = options.minimap || "";
   const minimap_script = minimap_html ? '  <script src="/minimap.js" defer></script>' : "";
   const feed_discovery = feed_discovery_html(options.feed_type || "");
+  const math_stylesheet = options.uses_math ? '  <link rel="stylesheet" href="/katex/katex.min.css">' : "";
 
   return [
     "<!doctype html>",
@@ -992,6 +1198,7 @@ function shell(options) {
     description ? '  <meta name="description" content="' + escape_html(description) + '">' : "",
     robots ? '  <meta name="robots" content="' + escape_html(robots) + '">' : "",
     feed_discovery,
+    math_stylesheet,
     '  <link rel="stylesheet" href="/style.css">',
     '  <script src="/sidebar.js" defer></script>',
     minimap_script,
@@ -1021,6 +1228,34 @@ function write_file(file, content) {
 
 function copy_file(file) {
   fs.copyFileSync(path.join(root, file), path.join(out, file));
+}
+
+
+function copy_directory(source, destination) {
+  fs.mkdirSync(destination, { recursive: true });
+
+  fs.readdirSync(source, { withFileTypes: true }).forEach(function(entry) {
+    const source_path = path.join(source, entry.name);
+    const destination_path = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      copy_directory(source_path, destination_path);
+      return;
+    }
+
+    if (entry.isFile()) {
+      fs.copyFileSync(source_path, destination_path);
+    }
+  });
+}
+
+function copy_katex_assets() {
+  const katex_root = path.dirname(require.resolve("katex/package.json"));
+  const katex_dist = path.join(katex_root, "dist");
+
+  fs.mkdirSync(path.join(out, "katex"), { recursive: true });
+  fs.copyFileSync(path.join(katex_dist, "katex.min.css"), path.join(out, "katex", "katex.min.css"));
+  copy_directory(path.join(katex_dist, "fonts"), path.join(out, "katex", "fonts"));
 }
 
 function validate_posts(items) {
@@ -1216,6 +1451,19 @@ function build_home(items) {
   }));
 }
 
+function section_listing_meta(items) {
+  const latest = metadata_latest_date(items);
+  const parts = [
+    metadata_post_count_label(items.length)
+  ];
+
+  if (latest) {
+    parts.push("latest " + latest);
+  }
+
+  return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
 function build_sections(items) {
   Object.keys(labels).forEach(function(type) {
     const section_posts = latest_by_title(items.filter(function(item) {
@@ -1230,7 +1478,7 @@ function build_sections(items) {
       content: [
         '      ' + section_kicker(type),
         "      <h1>" + labels[type] + "</h1>",
-        '      <p class="muted intro">' + escape_html(intros[type]) + "</p>",
+        '      <p class="muted intro">' + escape_html(intros[type]) + '<br><small>' + section_listing_meta(section_posts) + '</small></p>',
         "",
         sort_by_date(section_posts).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
       ].join("\n")
@@ -1246,7 +1494,7 @@ function build_archive(items) {
     content: [
       '      ' + archive_kicker(),
       "      <h1>Archive</h1>",
-      '      <p class="muted intro">All published posts, ordered by date from newest to oldest.</p>',
+      '      <p class="muted intro">All published posts, ordered by date from newest to oldest.<br><small>' + section_listing_meta(items) + '</small></p>',
       "",
       sort_by_date(items).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
     ].join("\n")
@@ -1261,28 +1509,7 @@ function build_about() {
     content: [
       '      ' + about_kicker(),
       "      <h1>About</h1>",
-      '      <p class="muted intro">Anodyne Avenue is a quiet, text-first archive of essays, guides, blog posts, and public metadata.</p>',
-      "",
-      "      <h2>What this site is</h2>",
-      "      <p>Anodyne Avenue is a small static website for slower writing, structured notes, and public fragments of thought. It is deliberately minimal: mostly text, simple navigation, and generated archive pages.</p>",
-      "      <p>The site is written under a pseudonym. The emphasis is on the writing, the structure of the archive, and the relationships between posts rather than on a personal profile.</p>",
-      "",
-      "      <h2>Sections</h2>",
-      "      <p><strong>Essays</strong> are longer investigations, arguments, and attempts to look at a topic from more than one perspective.</p>",
-      "      <p><strong>Guides</strong> are structured explanations, methods, and practical notes.</p>",
-      "      <p><strong>Blog</strong> contains shorter entries, fragments, logs, public journals, and irregular updates.</p>",
-      "      <p><strong>Archive</strong> lists all visible posts in date order, including multiple editions where they exist.</p>",
-      "",
-      "      <h2>Tags and metadata</h2>",
-            '      <p>Tags are treated as one form of public metadata. The main tag index therefore lives at <a href="/metadata/tags.html">/metadata/tags.html</a>, alongside other metadata fields such as type, date, revised date, abstract, and word count.</p>',
-      "      <p>The metadata pages are intended as another way to browse the archive: by field, entry, and post.</p>",
-      "",
-      "      <h2>Revisions and editions</h2>",
-      "      <p>A post may include a revised date when it has been meaningfully changed after publication. The original date remains the main publication date.</p>",
-      "      <p>Separate editions may appear as separate posts when a piece is substantially rewritten or republished. Section pages show the latest edition; the archive keeps the wider record.</p>",
-      "",
-      "      <h2>How to browse</h2>",
-      "      <p>Use the section pages for broad reading, the archive for chronological browsing, and the metadata pages for cross-sections through the site. Longer posts may also show an on-page minimap in the sidebar.</p>"
+      '      <p class="muted intro">Anodyne Avenue is ...</p>'
     ].join("\n")
   }));
 }
@@ -1349,9 +1576,11 @@ function build_sitemap(items) {
   fields.forEach(function(field) {
     entries.push(sitemap_entry(metadata_field_page(field), metadata_field_latest(field)));
 
-    metadata_field_values(field).forEach(function(value) {
-      entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
-    });
+    if (should_generate_metadata_value_page(field)) {
+      metadata_field_values(field).forEach(function(value) {
+        entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
+      });
+    }
   });
 
   sort_by_date(items).forEach(function(item) {
@@ -1470,7 +1699,10 @@ const search_index_metadata_excluded_keys = new Set([
   "revised",
   "tags",
   "abstract",
-  "word_count"
+  "word_count",
+  "uses_math",
+  "math_macros",
+  "allow_math_errors"
 ]);
 
 function search_index_metadata(item) {
@@ -1631,20 +1863,24 @@ function build_metadata_page(items) {
       content: [
         '      ' + metadata_field_kicker(field),
         "      <h1>" + escape_html(field.label) + "</h1>",
-        '      <p class="muted intro">' + metadata_field_meta(field) + "</p>",
+        metadata_field_intro(field),
         "",
         metadata_field_section(field)
       ].join("\n")
     }));
 
-    metadata_field_values(field).forEach(function(value) {
-      write_file(metadata_field_value_page(field, value), shell({
-        title: value.value + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
-        description: "Posts using " + field.label + ": " + value.value + ".",
-        back: true,
-        content: metadata_value_page_content(field, value)
-      }));
-    });
+    if (should_generate_metadata_value_page(field)) {
+      metadata_field_values(field).forEach(function(value) {
+        const label = metadata_value_label(field, value);
+
+        write_file(metadata_field_value_page(field, value), shell({
+          title: label + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
+          description: "Posts using " + field.label + ": " + label + ".",
+          back: true,
+          content: metadata_value_page_content(field, value)
+        }));
+      });
+    }
   });
 }
 
@@ -1671,6 +1907,7 @@ function post_headings(item, prepared) {
 function build_posts(items) {
   items.forEach(function(item) {
     const prepared = prepare_body(item.body);
+    const rendered_body = render_math_placeholders(prepared.html, item);
     const headings = post_headings(item, prepared);
 
     write_file(post_page(item), shell({
@@ -1678,6 +1915,7 @@ function build_posts(items) {
       description: item.abstract,
       back: true,
       feed_type: item.type,
+      uses_math: post_uses_math(item),
       minimap: minimap(headings, item.type),
       content: [
         '    <article class="post">',
@@ -1690,7 +1928,7 @@ function build_posts(items) {
         "      </header>",
         "",
         '      <section class="body">',
-        prepared.html,
+        rendered_body,
         "      </section>",
         "",
         post_footer_metadata(item),
@@ -1733,6 +1971,10 @@ function build() {
   build_robots();
   build_search_index(visible);
   build_sitemap(visible);
+
+  if (visible.some(post_uses_math)) {
+    copy_katex_assets();
+  }
 
   copy_file("style.css");
   copy_file("sidebar.js");

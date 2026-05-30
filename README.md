@@ -18,16 +18,17 @@ posts.js        post source data
 build.js        static site generator
 sidebar.js      sidebar interaction only
 style.css       visual layout and responsive behaviour
-package.json    build command
+package.json    build command and dependencies
+package-lock.json locked dependency versions
 tools/          local development and diagnostic scripts
 .github/        GitHub Pages build workflow
 
 Generated site:
 
 _site/index.html
-_site/essays.html
-_site/guides.html
-_site/blog.html
+_site/metadata/type/essays.html
+_site/metadata/type/guides.html
+_site/metadata/type/blog.html
 _site/archive.html
 _site/about.html
 _site/metadata.html
@@ -39,6 +40,7 @@ _site/blog/feed.xml   section RSS feed
 _site/robots.txt
 _site/sitemap.xml
 _site/search-index.json future archive search/filtering data
+_site/katex/       local KaTeX CSS and fonts, generated only when visible math posts exist
 _site/posts/
 
 The generated _site folder is published by GitHub Actions.
@@ -60,9 +62,11 @@ Tags
 Archive
 Metadata
 
-Metadata is generated as a public index at `/metadata.html`, with individual field pages under `/metadata/`. Metadata entries behave like tags: each distinct entry gets its own generated page, such as `/metadata/type/blog.html` or `/metadata/tags/debug.html`. Tags are part of the metadata system at `/metadata/tags.html`; this is the only generated tags index. The sidebar Tags link points there directly. Post-footer metadata cards link to the relevant post block on `/metadata.html`.
+Metadata is generated as a public index at `/metadata.html`, with individual field pages under `/metadata/`. Metadata field pages are always generated for the primary public fields. Some metadata values also generate their own pages, such as `/metadata/title/example_post.html` or `/metadata/tags/debug.html`, while low-value duplicate routes are deliberately suppressed. Essays, Guides, and Blog are canonical Type pages under `/metadata/type/`: `/metadata/type/essays.html`, `/metadata/type/guides.html`, and `/metadata/type/blog.html`. Tags are part of the metadata system at `/metadata/tags.html`; this is the only generated tags index. The sidebar Tags link points there directly. Post-footer metadata cards link to the relevant post block on `/metadata.html`.
 
 The base metadata pages are always generated, even if there are no visible posts. This includes `/metadata/slug.html`, `/metadata/title.html`, `/metadata/type.html`, `/metadata/date.html`, `/metadata/revised.html`, `/metadata/tags.html`, `/metadata/abstract.html`, and `/metadata/word_count.html`. Empty metadata pages keep their compact count line, such as `0 posts · 0 entries`, and display `No posts yet.` instead of failing.
+
+Metadata value routing is field-specific. Title, date, revised date, tags, and most additional public metadata fields generate value pages. Type values link to the canonical section pages under `/metadata/type/`; those Type pages are also the main Essays, Guides, and Blog section pages. Slug and abstract values link directly to posts when they identify a single post. Exact word-count values are shown on `/metadata/word_count.html` but do not generate exact word-count pages. Field pages may also define short descriptions before their count line; `/metadata/tags.html` uses this to describe tags as subject labels for browsing related posts.
 
 ## Behaviour
 
@@ -116,7 +120,7 @@ newer date
 new edition
 updated body
 
-Section pages show only the latest edition of a post.
+Section pages live under `/metadata/type/` and show only the latest edition of a post.
 
 The archive shows all editions.
 
@@ -126,9 +130,17 @@ Tag pages are generated only as metadata pages under `/metadata/tags/` and show 
 
 GitHub Actions builds the site automatically after a push to main.
 
+Install dependencies once with:
+
+```bash
+npm install
+```
+
 The workflow runs:
 
+```bash
 node build.js
+```
 
 The generated site is written to:
 
@@ -150,6 +162,69 @@ Feed-discovery `<link rel="alternate" type="application/rss+xml">` tags are gene
 Every generated HTML page includes a canonical URL in the page head. Canonical URLs are generated from the output file path and the configured site URL.
 
 The build writes `/search-index.json` for future archive search and filtering. The search index contains visible posts only and deliberately omits full post body text. It includes post titles, URLs, types, dates, revised dates, abstracts, tags, word counts, selected public metadata, and compact search text. It is not included in `sitemap.xml`.
+
+
+## Math rendering
+
+The site supports build-time maths rendering with KaTeX.
+
+Maths is authored in `posts.js` using helper functions that create neutral placeholders. `build.js` replaces those placeholders with static KaTeX HTML during the build. The browser does not load KaTeX JavaScript.
+
+For a post that uses maths, add:
+
+```js
+uses_math: true,
+```
+
+Inline maths:
+
+```js
+'<p>The rest energy is ' + math_inline(String.raw`E = mc^2`) + '.</p>'
+```
+
+Display maths:
+
+```js
+math_display(String.raw`\nabla \cdot \vec{E} = \frac{\rho}{\epsilon_0}`)
+```
+
+Labelled display maths:
+
+```js
+math_display(
+  String.raw`\vec{F}=q\left(\vec{E}+\vec{v}\times\vec{B}\right)`,
+  'Lorentz force'
+)
+```
+
+Multiline maths can use normal KaTeX-supported environments:
+
+```js
+math_display(String.raw`
+\begin{aligned}
+a &= b+c \\
+  &= d+e
+\end{aligned}
+`, 'Worked rearrangement')
+```
+
+Post-specific macros can be added with `math_macros`:
+
+```js
+math_macros: {
+  "\\E": "\\vec{E}",
+  "\\B": "\\vec{B}",
+  "\\dd": "\\,\\mathrm{d}"
+}
+```
+
+A hidden example post, `math-rendering-examples`, is included in `posts.js`. Set `show: true` temporarily to inspect the generated output locally.
+
+When at least one visible post uses maths, the build copies KaTeX CSS and fonts into `_site/katex/` and adds this stylesheet only to math post pages:
+
+```html
+<link rel="stylesheet" href="/katex/katex.min.css">
+```
 
 ## Minimap
 

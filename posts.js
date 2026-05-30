@@ -1,3 +1,19 @@
+function escape_attr(value) {
+  return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+}
+
+function math_inline(tex) {
+  return '<span class="math_source math_inline_source" data-tex="' + escape_attr(tex) + '"></span>';
+}
+
+function math_display(tex, label) {
+  return '<figure class="math_source math_display_source" data-tex="' + escape_attr(tex) + '" data-label="' + escape_attr(label || "") + '"></figure>';
+}
+
 const posts = [
   {
     show: false,
@@ -283,7 +299,60 @@ const posts = [
         '<p>Falsenor brenthavia solmerick danthelia pravossin quarnivel mordrassa jenvothic almerind cressavon hulthamer.</p>' +
         '<p>Ostrevic meldraven yassoria clentharic vornemil pasthelin gromiveth fessandor ulmarive tendrasken joltharia.</p>' +
         '<p>Venshara polthrenic qelvoria drumaneth calsiveri nethromal praskovin ellavoth murdelian sarnithek lostervan.</p>'
-  }
+  },
+
+  {
+    show: false,
+    slug: "math-rendering-examples",
+    title: "Math Rendering Examples",
+    type: "guides",
+    date: "2026-05-30",
+    edition: "example",
+    status: "hidden example",
+    uses_math: true,
+    math_macros: {
+      "\\E": "\\vec{E}",
+      "\\B": "\\vec{B}",
+      "\\dd": "\\,\\mathrm{d}",
+      "\\ket": "\\left|#1\\right\\rangle",
+      "\\bra": "\\left\\langle#1\\right|"
+    },
+    tags: ["math", "physics", "example"],
+    abstract: "Hidden example post showing inline, display, labelled, aligned, matrix, cases, vector-calculus, and bra-ket maths rendering.",
+    body:
+        '<p>This hidden post demonstrates build-time maths rendering. Inline maths works inside a paragraph, for example ' + math_inline(String.raw`E = mc^2`) + ' or ' + math_inline(String.raw`\psi(x)=\langle x\mid\psi\rangle`) + '.</p>' +
+        '<h2>Display equations</h2>' +
+        '<p>A display equation can be unlabelled:</p>' +
+        math_display(String.raw`\nabla \cdot \E = \frac{\rho}{\epsilon_0}`) +
+        '<p>It can also carry a quiet caption:</p>' +
+        math_display(String.raw`\vec{F} = q\left(\E + \vec{v}\times\B\right)`, 'Lorentz force') +
+        '<h2>Aligned working</h2>' +
+        math_display(String.raw`
+\begin{aligned}
+\nabla \cdot \E &= \frac{\rho}{\epsilon_0} \\
+\nabla \cdot \B &= 0 \\
+\nabla \times \E &= -\frac{\partial \B}{\partial t} \\
+\nabla \times \B &= \mu_0\vec{J}+\mu_0\epsilon_0\frac{\partial \E}{\partial t}
+\end{aligned}
+`, 'Maxwell equations, differential form') +
+        '<h2>Matrices and cases</h2>' +
+        math_display(String.raw`
+A = \begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix},\qquad
+f(x)=\begin{cases}
+x^2, & x\ge 0 \\
+-x^2, & x<0
+\end{cases}
+`) +
+        '<h2>Integrals and quantum notation</h2>' +
+        math_display(String.raw`
+\oint_{\partial S}\B\cdot\dd\vec{\ell}=\mu_0 I_{\mathrm{enc}},\qquad
+\bra{\phi}\hat{A}\ket{\psi}=\int_D \phi^*(x)(\hat{A}\psi)(x)\dd x
+`, 'Mixed physics notation')
+  },
+
 ];
 
 if (typeof module !== "undefined") {

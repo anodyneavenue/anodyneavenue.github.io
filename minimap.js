@@ -191,23 +191,21 @@ function note_minimap_user_scroll() {
     }, 220);
 }
 
-function keep_active_item_visible(minimap, item) {
+function track_active_minimap_item(minimap, item) {
     if (minimap_user_scrolling) {
         return;
     }
 
-    const top = item.offsetTop;
-    const bottom = top + item.offsetHeight;
-    const buffer = 12;
+    const max_scroll = Math.max(0, minimap.scrollHeight - minimap.clientHeight);
 
-    if (top < minimap.scrollTop + buffer) {
-        minimap.scrollTop = Math.max(0, top - buffer);
+    if (max_scroll <= 0) {
         return;
     }
 
-    if (bottom > minimap.scrollTop + minimap.clientHeight - buffer) {
-        minimap.scrollTop = bottom - minimap.clientHeight + buffer;
-    }
+    const item_centre = item.offsetTop + item.offsetHeight / 2;
+    const target = item_centre - minimap.clientHeight / 2;
+
+    minimap.scrollTop = Math.max(0, Math.min(max_scroll, target));
 }
 
 function progress_owner_for(minimap) {
@@ -253,7 +251,7 @@ function set_active_pair(minimap, active_index) {
 
     set_passed_pairs(active_index);
     set_progress(minimap);
-    keep_active_item_visible(minimap, active_pair.item);
+    track_active_minimap_item(minimap, active_pair.item);
 }
 
 function set_active_minimap_item() {

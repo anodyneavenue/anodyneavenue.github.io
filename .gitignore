@@ -29,3 +29,7 @@ todo.md
 
 # Local development/debug output
 _dev/
+
+# Python cache files
+__pycache__/
+*.py[cod]

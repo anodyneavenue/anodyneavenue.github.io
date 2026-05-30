@@ -388,6 +388,35 @@ main > .muted {
   margin-bottom: 1.1rem;
 }
 
+
+/* Build-time rendered maths */
+
+.math_inline .katex {
+  font-size: 1em;
+}
+
+.equation {
+  margin: 1.45rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.equation_body {
+  min-width: max-content;
+  text-align: center;
+}
+
+.equation_body .katex-display {
+  margin: 0;
+}
+
+.equation_label {
+  margin-top: .35rem;
+  color: var(--muted);
+  font-size: .78rem;
+  text-align: right;
+}
+
 .post footer {
   margin-top: 3rem;
   padding-top: 1rem;
@@ -941,4 +970,13 @@ main > .muted {
   font-size: .72rem;
   line-height: 1.25;
   white-space: nowrap;
+}
+
+.metadata_value_card_static:hover,
+.metadata_value_card_static:active {
+  background: transparent;
+}
+
+.metadata_value_card_static:hover span {
+  text-decoration: none;
 }
