@@ -28,7 +28,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: build site
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         run: node build.js
 
       - name: configure pages
