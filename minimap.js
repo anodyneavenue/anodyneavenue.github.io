@@ -223,10 +223,23 @@ function set_progress(minimap) {
     progress_owner_for(minimap).style.setProperty("--progress", String(document_progress()));
 }
 
+function set_passed_pairs(active_index) {
+    cached_pairs.forEach(function(pair, index) {
+        pair.item.classList.toggle("passed", index <= active_index);
+    });
+}
+
+function clear_passed_pairs() {
+    cached_pairs.forEach(function(pair) {
+        pair.item.classList.remove("passed");
+    });
+}
+
 function set_active_pair(minimap, active_index) {
     const active_pair = cached_pairs[active_index];
 
     if (!active_pair) {
+        clear_passed_pairs();
         return;
     }
 
@@ -238,6 +251,7 @@ function set_active_pair(minimap, active_index) {
         active_pair_index = active_index;
     }
 
+    set_passed_pairs(active_index);
     set_progress(minimap);
     keep_active_item_visible(minimap, active_pair.item);
 }
@@ -272,6 +286,7 @@ function set_active_minimap_item() {
     const active_index = active_index_from_scroll();
 
     if (active_index < 0) {
+        clear_passed_pairs();
         set_progress(minimap);
         return;
     }

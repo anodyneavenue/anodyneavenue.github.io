@@ -125,6 +125,7 @@ const posts = [
     title: "Long Nonsense Test Post",
     type: "blog",
     date: "2026-05-26",
+    revised: "2028-08-08",
     edition: "draft",
     tags: ["debug", "layout-test", "longform", "tag 1", "tag 2", "tag 3", "tag 4", "tag 5", "tag 6"],
     abstract: "A deliberately long nonsense post for testing spacing, scrolling, cards, archive layout, and the minimap.",

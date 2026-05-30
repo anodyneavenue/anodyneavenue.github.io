@@ -19,6 +19,8 @@ const out = path.join(root, "_site");
 
 const site_url = "https://anodyneavenue.github.io";
 
+const show_back_button = false;
+
 const version_file = path.join(root, "version.txt");
 let current_build_version = "";
 
@@ -242,7 +244,7 @@ function minimap(headings, type) {
     '        <nav class="minimap" aria-label="Post sections">',
     headings.map(function(heading, index) {
       const marker = heading.level <= 1
-          ? ""
+          ? "/"
           : "&gt;".repeat(heading.level - 1);
 
       const mix = Math.round((index / max_index) * 100);
@@ -282,7 +284,11 @@ function linked_kicker(label, href) {
 
 function breadcrumb_kicker(parts) {
   return '<p class="kicker breadcrumb_kicker">' + parts.map(function(part) {
-    return '<a href="' + escape_html(part.href) + '">' + escape_html(part.label) + '</a>';
+    if (part.href) {
+      return '<a href="' + escape_html(part.href) + '">' + escape_html(part.label) + '</a>';
+    }
+
+    return '<span>' + escape_html(part.label) + '</span>';
   }).join(' / ') + '</p>';
 }
 
@@ -299,21 +305,35 @@ function plain_site_kicker() {
 function section_kicker(type) {
   return breadcrumb_kicker([
     { label: "ANODYNE AVENUE", href: "/" },
-    { label: labels[type].toUpperCase(), href: "/" + page_for_type(type) }
+    { label: labels[type].toUpperCase() }
   ]);
+}
+
+function post_kicker(type) {
+  return '<p class="kicker breadcrumb_kicker">' +
+      '<a href="/">ANODYNE AVENUE</a> / ' +
+      '<a href="/' + escape_html(page_for_type(type)) + '">' + escape_html(labels[type].toUpperCase()) + '</a> /' +
+      '</p>';
 }
 
 function archive_kicker() {
   return breadcrumb_kicker([
     { label: "ANODYNE AVENUE", href: "/" },
-    { label: "ARCHIVE", href: "/archive.html" }
+    { label: "ARCHIVE" }
+  ]);
+}
+
+function about_kicker() {
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: "ABOUT" }
   ]);
 }
 
 function metadata_kicker() {
   return breadcrumb_kicker([
     { label: "ANODYNE AVENUE", href: "/" },
-    { label: "METADATA", href: "/metadata.html" }
+    { label: "METADATA" }
   ]);
 }
 
@@ -321,7 +341,16 @@ function metadata_field_kicker(field) {
   return breadcrumb_kicker([
     { label: "ANODYNE AVENUE", href: "/" },
     { label: "METADATA", href: "/metadata.html" },
-    { label: field.label.toUpperCase(), href: "/" + metadata_field_page(field) }
+    { label: field.label.toUpperCase() }
+  ]);
+}
+
+function metadata_value_kicker(field, value) {
+  return breadcrumb_kicker([
+    { label: "ANODYNE AVENUE", href: "/" },
+    { label: "METADATA", href: "/metadata.html" },
+    { label: field.label.toUpperCase(), href: "/" + metadata_field_page(field) },
+    { label: value.value.toUpperCase() }
   ]);
 }
 
@@ -415,10 +444,16 @@ const primary_metadata_order = [
   "title",
   "type",
   "date",
+  "revised",
   "tags",
   "abstract",
   "word_count"
 ];
+
+const date_metadata_keys = new Set([
+  "date",
+  "revised"
+]);
 
 function primary_metadata_rank(key) {
   const index = primary_metadata_order.indexOf(key);
@@ -471,9 +506,9 @@ function public_metadata_fields(item) {
   Object.keys(item)
       .filter(function(key) {
         return (
-          primary_metadata_order.indexOf(key) < 0 &&
-          !page_metadata_excluded_keys.has(key) &&
-          !metadata_value_empty(item[key])
+            primary_metadata_order.indexOf(key) < 0 &&
+            !page_metadata_excluded_keys.has(key) &&
+            !metadata_value_empty(item[key])
         );
       })
       .sort(function(a, b) {
@@ -583,12 +618,12 @@ function metadata_post_count_label(count) {
   return count + " posts";
 }
 
-function metadata_value_count_label(count) {
+function metadata_entry_count_label(count) {
   if (count === 1) {
-    return "1 value";
+    return "1 entry";
   }
 
-  return count + " values";
+  return count + " entries";
 }
 
 function metadata_latest_date(items) {
@@ -601,11 +636,35 @@ function metadata_latest_date(items) {
   return latest.date;
 }
 
+function valid_date_value(value) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
+}
+
+function metadata_field_latest(field) {
+  if (date_metadata_keys.has(field.key)) {
+    const latest_value = metadata_field_values(field)[0];
+
+    if (latest_value) {
+      return latest_value.value;
+    }
+
+    return "";
+  }
+
+  return metadata_latest_date(field.posts);
+}
+
 function metadata_field_meta(field) {
-  const latest = metadata_latest_date(field.posts);
+  const latest = metadata_field_latest(field);
   const parts = [
     metadata_post_count_label(field.posts.length),
-    metadata_value_count_label(field.values.size)
+    metadata_entry_count_label(field.values.size)
   ];
 
   if (latest) {
@@ -665,6 +724,23 @@ function metadata_value_card(field, value) {
 
 function metadata_field_values(field) {
   return [...field.values.values()].sort(function(a, b) {
+    if (date_metadata_keys.has(field.key)) {
+      const a_date = valid_date_value(a.value);
+      const b_date = valid_date_value(b.value);
+
+      if (a_date && b_date) {
+        return b_date - a_date;
+      }
+
+      if (a_date) {
+        return -1;
+      }
+
+      if (b_date) {
+        return 1;
+      }
+    }
+
     const post_difference = b.posts.length - a.posts.length;
 
     if (post_difference !== 0) {
@@ -685,8 +761,6 @@ function metadata_field_section(field) {
 
   return [
     '      <section class="metadata_group" id="metadata_' + escape_html(field.slug) + '">',
-    "        <h2>Values</h2>",
-    '        <p class="muted metadata_group_meta">' + metadata_field_meta(field) + "</p>",
     '        <section class="tag_index metadata_value_index">',
     value_html,
     "        </section>",
@@ -698,7 +772,7 @@ function metadata_value_page_content(field, value) {
   const posts = sort_by_date(value.posts);
 
   return [
-    '      ' + metadata_field_kicker(field),
+    '      ' + metadata_value_kicker(field, value),
     "      <h1>" + escape_html(value.value) + "</h1>",
     '      <p class="muted intro">' + metadata_value_meta(value) + "</p>",
     "",
@@ -831,6 +905,7 @@ function sidebar(extra_html) {
     '    <a class="title" href="/">ANODYNE AVENUE</a>',
     "",
     '    <nav class="sidebar_nav" aria-label="Main sections">',
+    '      <a href="/about.html">About</a>',
     '      <a href="/essays.html">Essays</a>',
     '      <a href="/guides.html">Guides</a>',
     '      <a href="/blog.html">Blog</a>',
@@ -847,14 +922,65 @@ function sidebar(extra_html) {
   }).join("\n");
 }
 
+function feed_page_for_type(type) {
+  return type + "/feed.xml";
+}
+
+function feed_discovery_html(type) {
+  const links = [
+    {
+      title: "Anodyne Avenue",
+      href: "/feed.xml"
+    }
+  ];
+
+  if (type && labels[type]) {
+    links.push({
+      title: "Anodyne Avenue — " + labels[type],
+      href: "/" + feed_page_for_type(type)
+    });
+  }
+
+  return links.map(function(link) {
+    return '  <link rel="alternate" type="application/rss+xml" title="' + escape_html(link.title) + '" href="' + escape_html(link.href) + '">';
+  }).join("\n");
+}
+
+function canonical_link_html(file) {
+  if (!file) {
+    return "";
+  }
+
+  return '  <link rel="canonical" href="' + escape_html(absolute_url(file)) + '">';
+}
+
+function add_canonical_to_html(file, content) {
+  if (!file || !String(file).endsWith(".html")) {
+    return content;
+  }
+
+  if (String(content).includes('rel="canonical"')) {
+    return content;
+  }
+
+  const canonical = canonical_link_html(file);
+
+  if (!canonical) {
+    return content;
+  }
+
+  return String(content).replace('  <link rel="stylesheet" href="/style.css">', canonical + "\n" + '  <link rel="stylesheet" href="/style.css">');
+}
+
 function shell(options) {
   const title = options.title;
   const description = options.description || "";
   const robots = options.robots || "";
-  const back = options.back || false;
+  const back = show_back_button && (options.back || false);
   const content = options.content;
   const minimap_html = options.minimap || "";
   const minimap_script = minimap_html ? '  <script src="/minimap.js" defer></script>' : "";
+  const feed_discovery = feed_discovery_html(options.feed_type || "");
 
   return [
     "<!doctype html>",
@@ -865,6 +991,7 @@ function shell(options) {
     "  <title>" + escape_html(title) + "</title>",
     description ? '  <meta name="description" content="' + escape_html(description) + '">' : "",
     robots ? '  <meta name="robots" content="' + escape_html(robots) + '">' : "",
+    feed_discovery,
     '  <link rel="stylesheet" href="/style.css">',
     '  <script src="/sidebar.js" defer></script>',
     minimap_script,
@@ -887,8 +1014,9 @@ function shell(options) {
 
 function write_file(file, content) {
   const full = path.join(out, file);
+  const final_content = add_canonical_to_html(file, content);
   fs.mkdirSync(path.dirname(full), { recursive: true });
-  fs.writeFileSync(full, content.trimStart(), "utf8");
+  fs.writeFileSync(full, final_content.trimStart(), "utf8");
 }
 
 function copy_file(file) {
@@ -1071,7 +1199,7 @@ function tag_index(tags) {
 }
 
 function build_home(items) {
-  const latest = sort_by_date(latest_by_title(items)).slice(0, 3);
+  const latest = sort_by_date(latest_by_title(items)).slice(0, 4);
 
   write_file("index.html", shell({
     title: "anodyne avenue",
@@ -1098,6 +1226,7 @@ function build_sections(items) {
       title: labels[type].toLowerCase() + " - anodyne avenue",
       description: intros[type],
       back: true,
+      feed_type: type,
       content: [
         '      ' + section_kicker(type),
         "      <h1>" + labels[type] + "</h1>",
@@ -1120,6 +1249,40 @@ function build_archive(items) {
       '      <p class="muted intro">All published posts, ordered by date from newest to oldest.</p>',
       "",
       sort_by_date(items).map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
+    ].join("\n")
+  }));
+}
+
+function build_about() {
+  write_file("about.html", shell({
+    title: "anodyne avenue - about",
+    description: "About Anodyne Avenue, its sections, metadata, revisions, and archive structure.",
+    back: true,
+    content: [
+      '      ' + about_kicker(),
+      "      <h1>About</h1>",
+      '      <p class="muted intro">Anodyne Avenue is a quiet, text-first archive of essays, guides, blog posts, and public metadata.</p>',
+      "",
+      "      <h2>What this site is</h2>",
+      "      <p>Anodyne Avenue is a small static website for slower writing, structured notes, and public fragments of thought. It is deliberately minimal: mostly text, simple navigation, and generated archive pages.</p>",
+      "      <p>The site is written under a pseudonym. The emphasis is on the writing, the structure of the archive, and the relationships between posts rather than on a personal profile.</p>",
+      "",
+      "      <h2>Sections</h2>",
+      "      <p><strong>Essays</strong> are longer investigations, arguments, and attempts to look at a topic from more than one perspective.</p>",
+      "      <p><strong>Guides</strong> are structured explanations, methods, and practical notes.</p>",
+      "      <p><strong>Blog</strong> contains shorter entries, fragments, logs, public journals, and irregular updates.</p>",
+      "      <p><strong>Archive</strong> lists all visible posts in date order, including multiple editions where they exist.</p>",
+      "",
+      "      <h2>Tags and metadata</h2>",
+            '      <p>Tags are treated as one form of public metadata. The main tag index therefore lives at <a href="/metadata/tags.html">/metadata/tags.html</a>, alongside other metadata fields such as type, date, revised date, abstract, and word count.</p>',
+      "      <p>The metadata pages are intended as another way to browse the archive: by field, entry, and post.</p>",
+      "",
+      "      <h2>Revisions and editions</h2>",
+      "      <p>A post may include a revised date when it has been meaningfully changed after publication. The original date remains the main publication date.</p>",
+      "      <p>Separate editions may appear as separate posts when a piece is substantially rewritten or republished. Section pages show the latest edition; the archive keeps the wider record.</p>",
+      "",
+      "      <h2>How to browse</h2>",
+      "      <p>Use the section pages for broad reading, the archive for chronological browsing, and the metadata pages for cross-sections through the site. Longer posts may also show an on-page minimap in the sidebar.</p>"
     ].join("\n")
   }));
 }
@@ -1174,11 +1337,17 @@ function build_sitemap(items) {
   });
 
   entries.push(sitemap_entry("archive.html"));
+  entries.push(sitemap_entry("about.html"));
+  entries.push(sitemap_entry("feed.xml"));
+
+  Object.keys(labels).forEach(function(type) {
+    entries.push(sitemap_entry(feed_page_for_type(type)));
+  });
+
   entries.push(sitemap_entry("metadata.html"));
-  entries.push(sitemap_entry("tags.html"));
 
   fields.forEach(function(field) {
-    entries.push(sitemap_entry(metadata_field_page(field), metadata_latest_date(field.posts)));
+    entries.push(sitemap_entry(metadata_field_page(field), metadata_field_latest(field)));
 
     metadata_field_values(field).forEach(function(value) {
       entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
@@ -1197,6 +1366,218 @@ function build_sitemap(items) {
   ].join("\n");
 
   write_file("sitemap.xml", xml);
+}
+
+function rss_date(value) {
+  const date = new Date(String(value || "") + "T00:00:00Z");
+
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toUTCString();
+  }
+
+  return date.toUTCString();
+}
+
+function feed_description(item) {
+  const parts = [];
+
+  if (item.revised) {
+    parts.push("Revised " + item.revised + ".");
+  }
+
+  if (item.abstract) {
+    parts.push(item.abstract);
+  }
+
+  return parts.join(" ");
+}
+
+function feed_file_for_type(type) {
+  return type ? feed_page_for_type(type) : "feed.xml";
+}
+
+function build_feed(items, options) {
+  const title = options.title;
+  const description = options.description;
+  const file = options.file;
+  const link = options.link;
+
+  const feed_items = sort_by_date(items).map(function(item) {
+    const url = absolute_url(post_page(item));
+    const categories = [labels[item.type]].concat(item.tags || []);
+
+    return [
+      "  <item>",
+      "    <title>" + escape_xml(item.title) + "</title>",
+      "    <link>" + escape_xml(url) + "</link>",
+      '    <guid isPermaLink="true">' + escape_xml(url) + '</guid>',
+      "    <pubDate>" + escape_xml(rss_date(item.date)) + "</pubDate>",
+      "    <description>" + escape_xml(feed_description(item)) + "</description>",
+      categories.filter(Boolean).map(function(category) {
+        return "    <category>" + escape_xml(category) + "</category>";
+      }).join("\n"),
+      "  </item>"
+    ].filter(Boolean).join("\n");
+  });
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0">',
+    '<channel>',
+    '  <title>' + escape_xml(title) + '</title>',
+    '  <link>' + escape_xml(absolute_url(link)) + '</link>',
+    '  <description>' + escape_xml(description) + '</description>',
+    '  <language>en-GB</language>',
+    '  <lastBuildDate>' + escape_xml(new Date().toUTCString()) + '</lastBuildDate>',
+    '  <generator>Anodyne Avenue static build script</generator>',
+    feed_items.join("\n"),
+    '</channel>',
+    '</rss>'
+  ].join("\n");
+
+  write_file(file, xml);
+}
+
+function build_feeds(items) {
+  build_feed(items, {
+    file: "feed.xml",
+    title: "anodyne avenue",
+    description: "An anonymous, text-first archive of essays, guides, and blog posts.",
+    link: "index.html"
+  });
+
+  Object.keys(labels).forEach(function(type) {
+    const section_posts = items.filter(function(item) {
+      return item.type === type;
+    });
+
+    build_feed(section_posts, {
+      file: feed_file_for_type(type),
+      title: "anodyne avenue — " + labels[type],
+      description: intros[type],
+      link: page_for_type(type)
+    });
+  });
+}
+
+const search_index_metadata_excluded_keys = new Set([
+  "show",
+  "body",
+  "slug",
+  "title",
+  "type",
+  "date",
+  "revised",
+  "tags",
+  "abstract",
+  "word_count"
+]);
+
+function search_index_metadata(item) {
+  const metadata = {};
+
+  public_metadata_fields(item).forEach(function(field) {
+    if (search_index_metadata_excluded_keys.has(field.key)) {
+      return;
+    }
+
+    metadata[field.key] = field.text;
+  });
+
+  return metadata;
+}
+
+function search_text_for_index(item, metadata) {
+  const parts = [
+    item.title,
+    labels[item.type],
+    item.type,
+    item.date,
+    item.revised || "",
+    item.abstract,
+    (item.tags || []).join(" "),
+    Object.keys(metadata).map(function(key) {
+      return key + " " + metadata[key];
+    }).join(" ")
+  ];
+
+  return parts
+      .filter(Boolean)
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+}
+
+function search_index_entry(item) {
+  const metadata = search_index_metadata(item);
+
+  return {
+    title: item.title,
+    url: "/" + post_page(item),
+    type: item.type,
+    type_label: labels[item.type],
+    date: item.date,
+    revised: item.revised || "",
+    abstract: item.abstract || "",
+    tags: item.tags || [],
+    word_count: word_count(item),
+    word_count_label: word_count_label(item),
+    metadata: metadata,
+    search_text: search_text_for_index(item, metadata)
+  };
+}
+
+function build_search_index(items) {
+  const index = sort_by_date(items).map(search_index_entry);
+
+  write_file("search-index.json", JSON.stringify(index, null, 2) + "\n");
+}
+
+function build_robots() {
+  write_file("robots.txt", [
+    "User-agent: *",
+    "Allow: /",
+    "",
+    "# Public static site.",
+    "# Metadata pages, feeds, posts, and generated assets are intentionally public.",
+    "# Tags live under /metadata/tags.html.",
+    "",
+    "# Sitemap",
+    "Sitemap: " + absolute_url("sitemap.xml"),
+    "",
+    "# AI-training / bulk-scraping crawler user agents.",
+    "# robots.txt is advisory and depends on crawler compliance.",
+    "User-agent: GPTBot",
+    "Disallow: /",
+    "",
+    "User-agent: Google-Extended",
+    "Disallow: /",
+    "",
+    "User-agent: Applebot-Extended",
+    "Disallow: /",
+    "",
+    "User-agent: ClaudeBot",
+    "Disallow: /",
+    "",
+    "User-agent: CCBot",
+    "Disallow: /",
+    "",
+    "User-agent: FacebookBot",
+    "Disallow: /",
+    "",
+    "User-agent: anthropic-ai",
+    "Disallow: /",
+    "",
+    "User-agent: PerplexityBot",
+    "Disallow: /",
+    "",
+    "User-agent: Bytespider",
+    "Disallow: /",
+    "",
+    "User-agent: Amazonbot",
+    "Disallow: /"
+  ].join("\n"));
 }
 
 function open_graph_meta(item) {
@@ -1232,7 +1613,7 @@ function build_metadata_page(items) {
     content: [
       '      ' + metadata_kicker(),
       "      <h1>Metadata</h1>",
-      '      <p class="muted intro">A public index of post metadata across the archive: fields, values, counts, and the posts attached to them.</p>',
+      '      <p class="muted intro">A public index of post metadata across the archive: fields, entries, counts, and the posts attached to them.</p>',
       "",
       metadata_field_index(fields),
       "",
@@ -1245,7 +1626,7 @@ function build_metadata_page(items) {
   fields.forEach(function(field) {
     write_file(metadata_field_page(field), shell({
       title: field.label.toLowerCase() + " metadata - anodyne avenue",
-      description: "Metadata values for " + field.label + ".",
+      description: "Metadata entries for " + field.label + ".",
       back: true,
       content: [
         '      ' + metadata_field_kicker(field),
@@ -1260,45 +1641,17 @@ function build_metadata_page(items) {
       write_file(metadata_field_value_page(field, value), shell({
         title: value.value + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
         description: "Posts using " + field.label + ": " + value.value + ".",
-          back: true,
+        back: true,
         content: metadata_value_page_content(field, value)
       }));
     });
   });
 }
 
-function build_tags_page(items) {
-  const fields = all_metadata_fields(items);
-  const tags_field = fields.find(function(field) {
-    return field.key === "tags";
-  });
-
-  const canonical = tags_field
-      ? "/" + metadata_field_page(tags_field)
-      : "/metadata.html";
-
-  write_file("tags.html", shell({
-    title: "anodyne avenue - tags",
-    description: "Tags are part of the public metadata index.",
-    back: true,
-    content: [
-      '      ' + metadata_kicker(),
-      "      <h1>Tags</h1>",
-      '      <p class="muted intro">Tags are now part of the metadata index.</p>',
-      "",
-      '      <section class="tag_index">',
-      '        <a class="tag_card" href="' + escape_html(canonical) + '">',
-      "          <small>canonical metadata page</small>",
-      "          <span>Open tags</span>",
-      "        </a>",
-      "      </section>"
-    ].join("\n")
-  }));
-}
 
 function build_tag_pages(items) {
   /*
-    Tags are now generated as normal metadata value pages under
+    Tags are now generated as normal metadata entry pages under
     /metadata/tags/. This function remains as a no-op so older build flow
     names stay understandable.
   */
@@ -1324,10 +1677,11 @@ function build_posts(items) {
       title: item.title + " - anodyne avenue",
       description: item.abstract,
       back: true,
+      feed_type: item.type,
       minimap: minimap(headings, item.type),
       content: [
         '    <article class="post">',
-        '      ' + section_kicker(item.type),
+        '      ' + post_kicker(item.type),
         '      <header>',
         '        <h1 id="post_title">' + escape_html(item.title) + "</h1>",
         "        <p><small>" + meta(item) + "</small></p>",
@@ -1370,11 +1724,14 @@ function build() {
   build_home(visible);
   build_sections(visible);
   build_archive(visible);
+  build_about();
   build_metadata_page(visible);
-  build_tags_page(visible);
   build_tag_pages(visible);
   build_posts(visible);
   build_404();
+  build_feeds(visible);
+  build_robots();
+  build_search_index(visible);
   build_sitemap(visible);
 
   copy_file("style.css");

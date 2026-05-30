@@ -470,7 +470,7 @@ main > .muted {
   --progress: 0;
 
   position: relative;
-  max-height: min(38vh, 20rem);
+  max-height: min(43vh, 22.5rem);
   min-height: 0;
 }
 
@@ -616,6 +616,11 @@ main > .muted {
   }
 }
 
+.minimap_item.passed .minimap_marker {
+  opacity: 1;
+  color: var(--fg);
+}
+
 .minimap_item:hover .minimap_marker,
 .minimap_item.active .minimap_marker {
   opacity: 1;
@@ -723,7 +728,7 @@ main > .muted {
   }
 
   .minimap_shell {
-    max-height: min(30vh, 13rem);
+    max-height: min(34vh, 15rem);
   }
 
   .minimap {
@@ -791,7 +796,7 @@ main > .muted {
 
 .post_meta_card:hover,
 .post_meta_card:active {
-  background: var(--panel);
+  background: transparent;
   text-decoration: none;
 }
 
@@ -806,6 +811,12 @@ main > .muted {
 
 .post_meta_card:hover .post_meta_card_label {
   text-decoration: underline;
+}
+
+.metadata_post_entry + .metadata_post_entry {
+  margin-top: .7rem;
+  padding-top: .7rem;
+  border-top: 1px solid var(--line);
 }
 
 .metadata_index {
@@ -849,6 +860,10 @@ main > .muted {
 .metadata_value_post_list {
   display: grid;
   gap: .7rem;
+}
+
+.metadata_posts {
+  gap: 0;
 }
 
 .metadata_value_card,
