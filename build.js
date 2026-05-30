@@ -460,6 +460,91 @@ function meta(item) {
 }
 
 
+function post_effective_date(item) {
+  return item.revised || item.date || "";
+}
+
+function sort_posts_for_navigation(items) {
+  return [...items].sort(function(a, b) {
+    const date_difference =
+        new Date(post_effective_date(b)) - new Date(post_effective_date(a));
+
+    if (date_difference !== 0) {
+      return date_difference;
+    }
+
+    const title_difference = String(a.title || "").localeCompare(String(b.title || ""));
+
+    if (title_difference !== 0) {
+      return title_difference;
+    }
+
+    return String(a.slug || "").localeCompare(String(b.slug || ""));
+  });
+}
+
+function adjacent_posts(item) {
+  const ordered = sort_posts_for_navigation(shown_posts());
+  const index = ordered.findIndex(function(post) {
+    return post.slug === item.slug;
+  });
+
+  return {
+    newer: index > 0 ? ordered[index - 1] : null,
+    older: index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null
+  };
+}
+
+function post_navigation_meta(item) {
+  const date_label = item.revised
+      ? "revised " + item.revised
+      : item.date;
+
+  return [
+    date_label,
+    labels[item.type],
+    word_count_label(item)
+  ].filter(Boolean).map(escape_html).join(" · ");
+}
+
+function post_navigation_link(label, item) {
+  return [
+    '        <a class="post_nav_link" href="/' + post_page(item) + '">',
+    '          <span class="post_nav_label">' + escape_html(label) + '</span>',
+    '          <span class="post_nav_title">' + escape_html(item.title) + '</span>',
+    '          <span class="post_nav_meta">' + post_navigation_meta(item) + '</span>',
+    '        </a>'
+  ].join("\n");
+}
+
+function post_navigation(item) {
+  const adjacent = adjacent_posts(item);
+  const links = [];
+
+  if (adjacent.newer) {
+    links.push(post_navigation_link("Newer", adjacent.newer));
+  }
+
+  if (adjacent.older) {
+    links.push(post_navigation_link("Older", adjacent.older));
+  }
+
+  if (!links.length) {
+    return "";
+  }
+
+  const class_name = links.length === 1
+      ? "post_nav post_nav_single"
+      : "post_nav";
+
+  return [
+    '      <nav class="' + class_name + '" aria-label="Post navigation">',
+    links.join("\n"),
+    '      </nav>'
+  ].join("\n");
+}
+
+
 function humanise_meta_key(key) {
   return String(key || "")
       .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
@@ -1930,6 +2015,8 @@ function build_posts(items) {
         '      <section class="body">',
         rendered_body,
         "      </section>",
+        "",
+        post_navigation(item),
         "",
         post_footer_metadata(item),
         "    </article>"
