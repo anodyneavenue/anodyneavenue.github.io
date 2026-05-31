@@ -1,8 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const katex = require("katex");
+const katex = require("katex"); // maths rendering module
 const posts = require("./posts.js");
 
+// main sections of the website
 const labels = {
   essays: "Essays",
   guides: "Guides",
@@ -19,8 +20,9 @@ const root = __dirname;
 const out = path.join(root, "_site");
 
 const site_url = "https://anodyneavenue.github.io";
+const support_url = "https://buymeacoffee.com/anodyneavenue";
 
-const show_back_button = false;
+const show_back_button = false; // not really necessary and causing more issues than solving
 
 const version_file = path.join(root, "version.txt");
 let current_build_version = "";
@@ -357,6 +359,50 @@ function page_for_type(type) {
 
 function post_page(item) {
   return "posts/" + item.slug + ".html";
+}
+
+function valid_sidebar_key(key) {
+  return ["about", "essays", "guides", "blog", "tags", "archive"].includes(String(key || ""));
+}
+
+function normalise_sidebar_key(key) {
+  const value = String(key || "").trim();
+
+  return valid_sidebar_key(value) ? value : "";
+}
+
+function active_sidebar_for_type(type) {
+  const value = String(type || "").trim();
+
+  return labels[value] ? value : "";
+}
+
+function active_sidebar_for_metadata_field(field) {
+  if (!field) {
+    return "";
+  }
+
+  if (field.key === "tags") {
+    return "tags";
+  }
+
+  return "";
+}
+
+function active_sidebar_for_metadata_value(field, value) {
+  if (!field) {
+    return "";
+  }
+
+  if (field.key === "tags") {
+    return "tags";
+  }
+
+  if (field.key === "type") {
+    return active_sidebar_for_type(value && value.value);
+  }
+
+  return "";
 }
 
 function tag_page(tag) {
@@ -1189,18 +1235,26 @@ function post_card(item) {
   ].join("\n");
 }
 
-function sidebar(extra_html) {
+function sidebar_link(label, href, key, active_sidebar) {
+  const active = key && active_sidebar === key;
+  const class_attr = active ? ' class="active" aria-current="page"' : "";
+  const key_attr = key ? ' data-sidebar-key="' + escape_html(key) + '"' : "";
+
+  return '      <a' + class_attr + key_attr + ' href="' + escape_html(href) + '">' + escape_html(label) + '</a>';
+}
+
+function sidebar(extra_html, active_sidebar) {
   return [
     '  <aside id="sidebar">',
     '    <a class="title" href="/">ANODYNE AVENUE</a>',
     "",
     '    <nav class="sidebar_nav" aria-label="Main sections">',
-    '      <a href="/about.html">About</a>',
-    '      <a href="/' + page_for_type("essays") + '">Essays</a>',
-    '      <a href="/' + page_for_type("guides") + '">Guides</a>',
-    '      <a href="/' + page_for_type("blog") + '">Blog</a>',
-    '      <a href="/metadata/tags.html">Tags</a>',
-    '      <a href="/archive.html">Archive</a>',
+    sidebar_link("About", "/about.html", "about", active_sidebar),
+    sidebar_link("Essays", "/" + page_for_type("essays"), "essays", active_sidebar),
+    sidebar_link("Guides", "/" + page_for_type("guides"), "guides", active_sidebar),
+    sidebar_link("Blog", "/" + page_for_type("blog"), "blog", active_sidebar),
+    sidebar_link("Tags", "/metadata/tags.html", "tags", active_sidebar),
+    sidebar_link("Archive", "/archive.html", "archive", active_sidebar),
     "    </nav>",
     "",
     extra_html || "",
@@ -1272,6 +1326,8 @@ function shell(options) {
   const minimap_script = minimap_html ? '  <script src="/minimap.js" defer></script>' : "";
   const feed_discovery = feed_discovery_html(options.feed_type || "");
   const math_stylesheet = options.uses_math ? '  <link rel="stylesheet" href="/katex/katex.min.css">' : "";
+  const active_sidebar = normalise_sidebar_key(options.active_sidebar || "");
+  const body_attr = active_sidebar ? ' data-active-sidebar="' + escape_html(active_sidebar) + '"' : "";
 
   return [
     "<!doctype html>",
@@ -1288,11 +1344,11 @@ function shell(options) {
     '  <script src="/sidebar.js" defer></script>',
     minimap_script,
     "</head>",
-    "<body>",
+    "<body" + body_attr + ">",
     '  <button id="toggle" type="button" aria-label="Toggle sidebar">☰</button>',
     back ? '  <button class="back" type="button" aria-label="Back">‹</button>' : "",
     "",
-    sidebar(minimap_html),
+    sidebar(minimap_html, active_sidebar),
     "",
     "  <main>",
     content,
@@ -1523,12 +1579,12 @@ function build_home(items) {
 
   write_file("index.html", shell({
     title: "anodyne avenue",
-    description: "An anonymous, text-first archive of essays, guides, and blog posts.",
+    description: "An independent archive of essays, guides, research notes, and long-form investigations.",
     back: true,
     content: [
       '      ' + plain_site_kicker(),
       "      <h1>Deep dives into topics of interest.</h1>",
-      '      <p class="muted intro">An anonymous <a href="/archive.html">archive</a> of essays, guides, and blog posts, under the pseudonym <b>anodyne avenue</b></p>',
+      '      <p class="muted intro">An independent <a href="/archive.html">archive</a> of essays, guides, research notes, and long-form investigations, published under the pen name <a href="/about.html">Anodyne Avenue</a>.</p>' ,
       "",
       "      <h2>Latest</h2>",
       latest.map(post_card).join("\n") || '      <p class="muted">No posts yet.</p>'
@@ -1559,6 +1615,7 @@ function build_sections(items) {
       title: labels[type].toLowerCase() + " - anodyne avenue",
       description: intros[type],
       back: true,
+      active_sidebar: active_sidebar_for_type(type),
       feed_type: type,
       content: [
         '      ' + section_kicker(type),
@@ -1576,6 +1633,7 @@ function build_archive(items) {
     title: "anodyne avenue - archive",
     description: "All published posts, ordered by date from newest to oldest.",
     back: true,
+    active_sidebar: "archive",
     content: [
       '      ' + archive_kicker(),
       "      <h1>Archive</h1>",
@@ -1586,16 +1644,35 @@ function build_archive(items) {
   }));
 }
 
+function support_html() {
+  if (!support_url) {
+    return "";
+  }
+
+  return [
+    "      <h2>Support</h2>",
+    "      <p>All content on Anodyne Avenue is freely available. If you find the archive useful and would like to support both the publication and the person behind it, you can do so through Buy Me a Coffee.</p>",
+    '<a class="support_link" href="https://buymeacoffee.com/anodyneavenue" target="_blank" rel="noopener noreferrer">Support Anodyne Avenue</a>'
+  ].join("\n");
+}
+
 function build_about() {
   write_file("about.html", shell({
     title: "anodyne avenue - about",
-    description: "About Anodyne Avenue, its sections, metadata, revisions, and archive structure.",
+    description: "About Anodyne Avenue as an independent publication and digital archive.",
     back: true,
+    active_sidebar: "about",
     content: [
       '      ' + about_kicker(),
       "      <h1>About</h1>",
-      '      <p class="muted intro">Anodyne Avenue is ...</p>'
-    ].join("\n")
+      "      <p>Anodyne Avenue is an independent publication and digital archive of essays, guides, research notes, and long-form investigations.</p>",
+      "      <p>The site is written and maintained by a single author under the pen name Anodyne Avenue. It exists as a place to explore questions in science, mathematics, technology, philosophy, history, and other subjects that reward deeper examination than a typical article, social-media post, or news cycle can provide.</p>",
+      "      <p>Some pieces are practical guides. Others are essays, reflections, or attempts to understand a difficult idea from multiple perspectives. The common thread is curiosity, careful reasoning, and a preference for depth over speed.</p>",
+      "      <p>Although many posts draw on my background in physics, the aim of Anodyne Avenue is not to be limited to any one discipline. The most interesting questions rarely respect the boundaries between subjects.</p>",
+      "      <p>This archive is a long-term project: a place to document what I learn, what I discover, and occasionally what I change my mind about.</p>",
+      "      <p>I hope you enjoy :)</p>",
+      support_html()
+    ].filter(Boolean).join("\n")
   }));
 }
 
@@ -1945,6 +2022,7 @@ function build_metadata_page(items) {
       title: field.label.toLowerCase() + " metadata - anodyne avenue",
       description: "Metadata entries for " + field.label + ".",
       back: true,
+      active_sidebar: active_sidebar_for_metadata_field(field),
       content: [
         '      ' + metadata_field_kicker(field),
         "      <h1>" + escape_html(field.label) + "</h1>",
@@ -1962,6 +2040,7 @@ function build_metadata_page(items) {
           title: label + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
           description: "Posts using " + field.label + ": " + label + ".",
           back: true,
+          active_sidebar: active_sidebar_for_metadata_value(field, value),
           content: metadata_value_page_content(field, value)
         }));
       });
@@ -2001,6 +2080,7 @@ function build_posts(items) {
       back: true,
       feed_type: item.type,
       uses_math: post_uses_math(item),
+      active_sidebar: active_sidebar_for_type(item.type),
       minimap: minimap(headings, item.type),
       content: [
         '    <article class="post">',
@@ -2068,4 +2148,4 @@ function build() {
   copy_file("minimap.js");
 }
 
-build();
+build(); // builds the website - woo!

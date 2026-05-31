@@ -143,6 +143,66 @@ function handle_breakpoint_change(event) {
   }
 }
 
+
+function current_sidebar_key_from_pathname(pathname) {
+  const path = String(pathname || "/").replace(/\/+$/, "") || "/";
+
+  if (path === "/about.html" || path === "/about") {
+    return "about";
+  }
+
+  if (path === "/archive.html" || path === "/archive") {
+    return "archive";
+  }
+
+  if (path === "/metadata/tags.html" || path === "/metadata/tags") {
+    return "tags";
+  }
+
+  if (path.startsWith("/metadata/tags/")) {
+    return "tags";
+  }
+
+  if (path === "/metadata/type/essays.html" || path === "/metadata/type/essays") {
+    return "essays";
+  }
+
+  if (path === "/metadata/type/guides.html" || path === "/metadata/type/guides") {
+    return "guides";
+  }
+
+  if (path === "/metadata/type/blog.html" || path === "/metadata/type/blog") {
+    return "blog";
+  }
+
+  return "";
+}
+
+function highlight_sidebar_link() {
+  const sidebar = document.getElementById("sidebar");
+
+  if (!sidebar) {
+    return;
+  }
+
+  const generated_key = document.body.dataset.activeSidebar || "";
+  const fallback_key = current_sidebar_key_from_pathname(location.pathname);
+  const active_key = generated_key || fallback_key;
+
+  sidebar.querySelectorAll(".sidebar_nav a").forEach(function(link) {
+    const active = active_key && link.dataset.sidebarKey === active_key;
+
+    link.classList.toggle("active", Boolean(active));
+
+    if (active) {
+      link.setAttribute("aria-current", "page");
+      return;
+    }
+
+    link.removeAttribute("aria-current");
+  });
+}
+
 function go_back() {
   if (history.length > 1) {
     history.back();
@@ -152,7 +212,9 @@ function go_back() {
   location.href = "/";
 }
 
+
 restore_sidebar_state();
+highlight_sidebar_link();
 
 document.getElementById("toggle")?.addEventListener("click", toggle_sidebar);
 
