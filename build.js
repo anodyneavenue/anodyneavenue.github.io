@@ -361,6 +361,10 @@ function post_page(item) {
   return "posts/" + item.slug + ".html";
 }
 
+function post_text_page(item) {
+  return "posts/" + item.slug + ".txt";
+}
+
 function valid_sidebar_key(key) {
   return ["about", "essays", "guides", "blog", "tags", "archive"].includes(String(key || ""));
 }
@@ -590,6 +594,167 @@ function post_navigation(item) {
   ].join("\n");
 }
 
+
+function post_downloads(item) {
+  return [
+    '      <a class="kicker post_downloads" href="/' + post_text_page(item) + '" download>',
+    '        <span class="post_downloads_text">DOWNLOAD .txt</span>',
+    "      </a>"
+  ].join("\n");
+}
+
+function decode_html_text(value) {
+  return String(value || "")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#34;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&apos;", "'")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&nbsp;", " ")
+      .replaceAll("&amp;", "&");
+}
+
+function text_clean(value) {
+  return decode_html_text(
+      String(value || "")
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<[^>]*>/g, " ")
+  )
+      .replace(/[ \t]+/g, " ")
+      .replace(/\s*\n\s*/g, "\n")
+      .trim();
+}
+
+function heading_text(value) {
+  const clean = text_clean(value);
+
+  if (!clean) {
+    return "";
+  }
+
+  return clean + "\n" + "-".repeat(clean.length);
+}
+
+function replace_inline_links_for_text(value) {
+  return String(value || "").replace(/<a\s+[^>]*href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gis, function(match, href, inner) {
+    const label = text_clean(inner);
+    const url = decode_html_text(href).trim();
+
+    if (!label) {
+      return url;
+    }
+
+    if (!url || label === url) {
+      return label;
+    }
+
+    return label + " (" + url + ")";
+  });
+}
+
+function body_html_to_text(html) {
+  let text = String(html || "");
+
+  /*
+    Export maths source, not rendered KaTeX. This function receives item.body
+    before render_math_placeholders(...), so maths placeholders are still the
+    compact source forms produced by posts.js.
+  */
+  text = text.replace(/<span class="math_source math_inline_source" data-tex="([^"]*)"><\/span>/g, function(match, tex_attr) {
+    return "\\(" + decode_attr(tex_attr) + "\\)";
+  });
+
+  text = text.replace(/<figure class="math_source math_display_source" data-tex="([^"]*)" data-label="([^"]*)"><\/figure>/g, function(match, tex_attr, label_attr) {
+    const tex = decode_attr(tex_attr).trim();
+    const label = decode_attr(label_attr || "").trim();
+
+    return "\n\n" +
+        (label ? "Equation: " + label + "\n\n" : "") +
+        tex +
+        "\n\n";
+  });
+
+  text = replace_inline_links_for_text(text);
+
+  text = text.replace(/<h2[^>]*>(.*?)<\/h2>/gis, function(match, inner) {
+    return "\n\n" + heading_text(inner) + "\n\n";
+  });
+
+  text = text.replace(/<h3[^>]*>(.*?)<\/h3>/gis, function(match, inner) {
+    return "\n\n" + heading_text(inner) + "\n\n";
+  });
+
+  text = text.replace(/<h4[^>]*>(.*?)<\/h4>/gis, function(match, inner) {
+    return "\n\n" + heading_text(inner) + "\n\n";
+  });
+
+  text = text.replace(/<p[^>]*>(.*?)<\/p>/gis, function(match, inner) {
+    const clean = text_clean(inner);
+    return clean ? "\n\n" + clean + "\n\n" : "\n\n";
+  });
+
+  text = text.replace(/<li[^>]*>(.*?)<\/li>/gis, function(match, inner) {
+    const clean = text_clean(inner);
+    return clean ? "\n- " + clean : "";
+  });
+
+  text = text.replace(/<br\s*\/?\s*>/gi, "\n");
+  text = text.replace(/<[^>]*>/g, " ");
+
+  return decode_html_text(text)
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n[ \t]+/g, "\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+}
+
+function text_export_metadata(item) {
+  const rows = [
+    item.date ? "Date: " + item.date : "",
+    item.revised ? "Revised: " + item.revised : "",
+    item.type && labels[item.type] ? "Type: " + labels[item.type] : "",
+    item.edition ? "Edition: " + item.edition : "",
+    item.status ? "Status: " + item.status : "",
+    item.tags && item.tags.length ? "Tags: " + item.tags.join(", ") : "",
+    "Source: " + absolute_url(post_page(item))
+  ];
+
+  return rows.filter(Boolean).join("\n");
+}
+
+function post_text_export(item) {
+  const title = text_clean(item.title || item.slug || "Untitled");
+  const abstract = text_clean(item.abstract || "");
+  const body = body_html_to_text(item.body);
+  const sections = [
+    title,
+    "=".repeat(title.length),
+    "",
+    text_export_metadata(item)
+  ];
+
+  if (abstract) {
+    sections.push(
+        "",
+        "Abstract",
+        "--------",
+        "",
+        abstract
+    );
+  }
+
+  sections.push(
+      "",
+      "Body",
+      "----",
+      "",
+      body
+  );
+
+  return sections.join("\n").replace(/\n{3,}/g, "\n\n") + "\n";
+}
 
 function humanise_meta_key(key) {
   return String(key || "")
@@ -1656,7 +1821,34 @@ function support_html() {
   ].join("\n");
 }
 
+function about_body_html() {
+  return [
+    "      <p>Anodyne Avenue is an independent publication and digital archive of essays, guides, research notes, and long-form investigations.</p>",
+    "      <p>The site is written and maintained by a single author under the pen name Anodyne Avenue. It exists as a place to explore questions in science, mathematics, technology, philosophy, history, and other subjects that reward deeper examination than a typical article, social-media post, or news cycle can provide.</p>",
+    "      <p>Some pieces are practical guides. Others are essays, reflections, or attempts to understand a difficult idea from multiple perspectives. The common thread is curiosity, careful reasoning, and a preference for depth over speed.</p>",
+    "      <p>Although many posts draw on my background in physics, the aim of Anodyne Avenue is not to be limited to any one discipline. The most interesting questions rarely respect the boundaries between subjects.</p>",
+    "      <p>This archive is a long-term project: a place to document what I learn, what I discover, and occasionally what I change my mind about.</p>",
+    "      <p>I hope you enjoy :)</p>",
+    support_html()
+  ].filter(Boolean).join("\n");
+}
+
+function about_text_export() {
+  const title = "About";
+
+  return [
+    title,
+    "=".repeat(title.length),
+    "",
+    "Source: " + absolute_url("about.html"),
+    "",
+    body_html_to_text(about_body_html())
+  ].join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+}
+
 function build_about() {
+  write_file("about.txt", about_text_export());
+
   write_file("about.html", shell({
     title: "anodyne avenue - about",
     description: "About Anodyne Avenue as an independent publication and digital archive.",
@@ -1665,15 +1857,17 @@ function build_about() {
     content: [
       '      ' + about_kicker(),
       "      <h1>About</h1>",
-      "      <p>Anodyne Avenue is an independent publication and digital archive of essays, guides, research notes, and long-form investigations.</p>",
-      "      <p>The site is written and maintained by a single author under the pen name Anodyne Avenue. It exists as a place to explore questions in science, mathematics, technology, philosophy, history, and other subjects that reward deeper examination than a typical article, social-media post, or news cycle can provide.</p>",
-      "      <p>Some pieces are practical guides. Others are essays, reflections, or attempts to understand a difficult idea from multiple perspectives. The common thread is curiosity, careful reasoning, and a preference for depth over speed.</p>",
-      "      <p>Although many posts draw on my background in physics, the aim of Anodyne Avenue is not to be limited to any one discipline. The most interesting questions rarely respect the boundaries between subjects.</p>",
-      "      <p>This archive is a long-term project: a place to document what I learn, what I discover, and occasionally what I change my mind about.</p>",
-      "      <p>I hope you enjoy :)</p>",
-      support_html()
+      about_body_html()
     ].filter(Boolean).join("\n")
   }));
+}
+
+function build_public_version() {
+  if (!current_build_version) {
+    return;
+  }
+
+  write_file("version.txt", current_build_version + "\n");
 }
 
 function build_404() {
@@ -1933,15 +2127,16 @@ function build_robots() {
     "User-agent: *",
     "Allow: /",
     "",
-    "# Public static site.",
-    "# Metadata pages, feeds, posts, and generated assets are intentionally public.",
-    "# Tags live under /metadata/tags.html.",
+    "# Hello there! This is robots.txt for anodyne avenue",
+    "# Public static site",
+    "# Metadata pages, feeds, posts, and generated assets are intentionally public",
+    "# Tags live inside /metadata/tags.html",
     "",
     "# Sitemap",
     "Sitemap: " + absolute_url("sitemap.xml"),
     "",
-    "# AI-training / bulk-scraping crawler user agents.",
-    "# robots.txt is advisory and depends on crawler compliance.",
+    "# AI-training / bulk-scraping crawler agents",
+    "",
     "User-agent: GPTBot",
     "Disallow: /",
     "",
@@ -1954,7 +2149,13 @@ function build_robots() {
     "User-agent: ClaudeBot",
     "Disallow: /",
     "",
+    "User-agent: Claude-Web",
+    "Disallow: /",
+    "",
     "User-agent: CCBot",
+    "Disallow: /",
+    "",
+    "User-agent: img2dataset",
     "Disallow: /",
     "",
     "User-agent: FacebookBot",
@@ -1966,11 +2167,32 @@ function build_robots() {
     "User-agent: PerplexityBot",
     "Disallow: /",
     "",
+    "User-agent: Perplexity-User",
+    "Disallow: /",
+    "",
     "User-agent: Bytespider",
     "Disallow: /",
     "",
     "User-agent: Amazonbot",
-    "Disallow: /"
+    "Disallow: /",
+    "",
+    "User-agent: Omgilibot",
+    "Disallow: /",
+    "",
+    "User-agent: Omgili",
+    "Disallow: /",
+    "",
+    "User-agent: magpie-crawler",
+    "Disallow: /",
+    "",
+    "User-agent: Meta-ExternalAgent",
+    "Disallow: /",
+    "",
+    "User-agent: meta-externalagent",
+    "Disallow: /",
+    "",
+    "# Thanks, bye"
+
   ].join("\n"));
 }
 
@@ -2074,6 +2296,8 @@ function build_posts(items) {
     const rendered_body = render_math_placeholders(prepared.html, item);
     const headings = post_headings(item, prepared);
 
+    write_file(post_text_page(item), post_text_export(item));
+
     write_file(post_page(item), shell({
       title: item.title + " - anodyne avenue",
       description: item.abstract,
@@ -2095,6 +2319,8 @@ function build_posts(items) {
         '      <section class="body">',
         rendered_body,
         "      </section>",
+        "",
+        post_downloads(item),
         "",
         post_navigation(item),
         "",
@@ -2130,6 +2356,7 @@ function build() {
   build_sections(visible);
   build_archive(visible);
   build_about();
+  build_public_version();
   build_metadata_page(visible);
   build_tag_pages(visible);
   build_posts(visible);

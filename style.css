@@ -519,6 +519,27 @@ main > .muted {
   margin-top: 1.25rem;
 }
 
+.post_downloads {
+  display: inline-block;
+  margin: 1.25rem 0 1.25rem;
+}
+
+.post_downloads_text {
+  border-bottom: 1px solid transparent;
+}
+
+.post_downloads:hover,
+.post_downloads:active,
+.post_downloads:focus-visible {
+  text-decoration: none;
+}
+
+.post_downloads:hover .post_downloads_text,
+.post_downloads:active .post_downloads_text,
+.post_downloads:focus-visible .post_downloads_text {
+  border-bottom-color: currentColor;
+}
+
 .post_meta_footer {
   color: var(--muted);
   font-size: .82rem;
