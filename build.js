@@ -1652,7 +1652,7 @@ function support_html() {
   return [
     "      <h2>Support</h2>",
     "      <p>All content on Anodyne Avenue is freely available. If you find the archive useful and would like to support both the publication and the person behind it, you can do so through Buy Me a Coffee.</p>",
-    '<a class="support_link" href="https://buymeacoffee.com/anodyneavenue" target="_blank" rel="noopener noreferrer">Support Anodyne Avenue</a>'
+    '<a class="support_link" href="https://buymeacoffee.com/anodyneavenue" target="_blank" rel="noopener noreferrer">Buy Me a Coffee</a>'
   ].join("\n");
 }
 
