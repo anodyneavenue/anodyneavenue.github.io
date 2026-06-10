@@ -25,7 +25,6 @@ Thumbs.db
 # Optional local-only helper scripts
 *.bat
 
-todo.md
 
 # Local development/debugging output
 _dev/

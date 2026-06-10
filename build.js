@@ -1,9 +1,12 @@
+// ============================================================================
+// Imports and site configuration
+// ============================================================================
+
 const fs = require("fs");
 const path = require("path");
 const katex = require("katex"); // maths rendering module
 const posts = require("./posts.js");
 
-// main sections of the website
 const labels = {
   essays: "Essays",
   guides: "Guides",
@@ -18,12 +21,14 @@ const intros = {
 
 const root = __dirname;
 const out = path.join(root, "_site");
-
 const site_url = "https://anodyneavenue.github.io";
-const support_url = "https://buymeacoffee.com/anodyneavenue";
 
+// ============================================================================
+// Versioning
+// ============================================================================
 
 const version_file = path.join(root, "version.txt");
+
 let current_build_version = "";
 
 function pad2(value) {
@@ -83,12 +88,9 @@ function version_footer_html() {
   return '<span class="site_version">v' + escape_html(current_build_version) + '</span>';
 }
 
-
-function shown_posts() {
-  return posts.filter(function(item) {
-    return item.show === true;
-  });
-}
+// ============================================================================
+// Escaping, text, slug, and URL utilities
+// ============================================================================
 
 function escape_html(value) {
   return String(value || "")
@@ -107,17 +109,6 @@ function escape_xml(value) {
       .replaceAll("'", "&apos;");
 }
 
-
-const global_math_macros = {
-  "\\dd": "\\,\\mathrm{d}",
-  "\\pd": "\\partial",
-  "\\E": "\\vec{E}",
-  "\\B": "\\vec{B}",
-  "\\ket": "\\left|#1\\right\\rangle",
-  "\\bra": "\\left\\langle#1\\right|",
-  "\\braket": "\\left\\langle#1\\middle|#2\\right\\rangle"
-};
-
 function decode_attr(value) {
   return String(value || "")
       .replaceAll("&quot;", '"')
@@ -129,74 +120,16 @@ function decode_attr(value) {
       .replaceAll("&amp;", "&");
 }
 
-function math_macros_for_post(item) {
-  return Object.assign({}, global_math_macros, item.math_macros || {});
-}
-
-function math_placeholders_present(html) {
-  return String(html || "").includes("math_source");
-}
-
-function post_uses_math(item) {
-  return item.uses_math === true || math_placeholders_present(item.body);
-}
-
-function render_katex(tex, display_mode, item, label) {
-  try {
-    return katex.renderToString(tex, {
-      displayMode: display_mode,
-      throwOnError: item.allow_math_errors === true ? false : true,
-      macros: math_macros_for_post(item)
-    });
-  } catch (error) {
-    const context = [
-      "Math render error in post: " + (item.title || item.slug || "unknown post"),
-      label ? "Equation label: " + label : "Equation label: none",
-      "TeX:",
-      tex,
-      "KaTeX error:",
-      error.message
-    ].join("\n");
-
-    throw new Error(context);
-  }
-}
-
-function render_inline_math(match, tex_attr) {
-  const tex = decode_attr(tex_attr);
-  const item = render_inline_math.current_item;
-  return '<span class="math_inline">' + render_katex(tex, false, item, "") + '</span>';
-}
-
-function render_display_math(match, tex_attr, label_attr) {
-  const tex = decode_attr(tex_attr);
-  const label = decode_attr(label_attr || "");
-  const item = render_display_math.current_item;
-  const rendered = render_katex(tex, true, item, label);
-
-  return [
-    '<figure class="equation">',
-    '  <div class="equation_body">' + rendered + '</div>',
-    label ? '  <figcaption class="equation_label">' + escape_html(label) + '</figcaption>' : '',
-    '</figure>'
-  ].filter(Boolean).join("\n");
-}
-
-function render_math_placeholders(html, item) {
-  render_inline_math.current_item = item;
-  render_display_math.current_item = item;
-
-  return String(html || "")
-      .replace(/<span class="math_source math_inline_source" data-tex="([^"]*)"><\/span>/g, render_inline_math)
-      .replace(/<figure class="math_source math_display_source" data-tex="([^"]*)" data-label="([^"]*)"><\/figure>/g, render_display_math);
-}
-
-function absolute_url(file) {
-  if (!file || file === "index.html") {
-    return site_url + "/";
-  }
-
-  return site_url + "/" + String(file).replace(/^\/+/, "");
+function decode_html_text(value) {
+  return String(value || "")
+      .replaceAll("&quot;", '"')
+      .replaceAll("&#34;", '"')
+      .replaceAll("&#39;", "'")
+      .replaceAll("&apos;", "'")
+      .replaceAll("&lt;", "<")
+      .replaceAll("&gt;", ">")
+      .replaceAll("&nbsp;", " ")
+      .replaceAll("&amp;", "&");
 }
 
 function strip_html(value) {
@@ -213,6 +146,94 @@ function slug_text(value) {
       .replaceAll("&", "and")
       .replace(/[^a-z0-9]+/g, "_")
       .replace(/^_+|_+$/g, "");
+}
+
+function absolute_url(file) {
+  if (!file || file === "index.html") {
+    return site_url + "/";
+  }
+
+  return site_url + "/" + String(file).replace(/^\/+/, "");
+}
+
+function text_clean(value) {
+  return decode_html_text(
+      String(value || "")
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<[^>]*>/g, " ")
+  )
+      .replace(/[ \t]+/g, " ")
+      .replace(/\s*\n\s*/g, "\n")
+      .trim();
+}
+
+function humanise_meta_key(key) {
+  return String(key || "")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/^./, function(char) {
+        return char.toUpperCase();
+      });
+}
+
+// ============================================================================
+// Route helpers
+// ============================================================================
+
+function page_for_type(type) {
+  return "metadata/type/" + slug_text(type) + ".html";
+}
+
+function post_page(item) {
+  return "posts/" + item.slug + ".html";
+}
+
+function post_text_page(item) {
+  return "posts/" + item.slug + ".txt";
+}
+
+function tag_slug(tag) {
+  return slug_text(tag);
+}
+
+function tag_page(tag) {
+  return "metadata/tags/" + tag_slug(tag) + ".html";
+}
+
+function metadata_field_slug(key) {
+  return slug_text(key) || "metadata";
+}
+
+function metadata_field_page(field) {
+  return "metadata/" + field.slug + ".html";
+}
+
+function metadata_value_slug(value) {
+  return slug_text(value.value) || "value";
+}
+
+function metadata_field_value_page(field, value) {
+  return "metadata/" + field.slug + "/" + metadata_value_slug(value) + ".html";
+}
+
+function feed_page_for_type(type) {
+  return type + "/feed.xml";
+}
+
+function feed_file_for_type(type) {
+  return type ? feed_page_for_type(type) : "feed.xml";
+}
+
+// ============================================================================
+// Post collection, sorting, and navigation helpers
+// ============================================================================
+
+function shown_posts() {
+  return posts.filter(function(item) {
+    return item.show === true;
+  });
 }
 
 function word_count(item) {
@@ -265,9 +286,120 @@ function latest_by_title(items) {
   return [...latest.values()];
 }
 
-function tag_slug(tag) {
-  return slug_text(tag);
+function post_effective_date(item) {
+  return item.revised || item.date || "";
 }
+
+function sort_posts_for_navigation(items) {
+  return [...items].sort(function(a, b) {
+    const date_difference =
+        new Date(post_effective_date(b)) - new Date(post_effective_date(a));
+
+    if (date_difference !== 0) {
+      return date_difference;
+    }
+
+    const title_difference = String(a.title || "").localeCompare(String(b.title || ""));
+
+    if (title_difference !== 0) {
+      return title_difference;
+    }
+
+    return String(a.slug || "").localeCompare(String(b.slug || ""));
+  });
+}
+
+function adjacent_posts(item) {
+  const ordered = sort_posts_for_navigation(shown_posts());
+  const index = ordered.findIndex(function(post) {
+    return post.slug === item.slug;
+  });
+
+  return {
+    newer: index > 0 ? ordered[index - 1] : null,
+    older: index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null
+  };
+}
+
+// ============================================================================
+// Maths rendering
+// ============================================================================
+
+const global_math_macros = {
+  "\\dd": "\\,\\mathrm{d}",
+  "\\pd": "\\partial",
+  "\\E": "\\vec{E}",
+  "\\B": "\\vec{B}",
+  "\\ket": "\\left|#1\\right\\rangle",
+  "\\bra": "\\left\\langle#1\\right|",
+  "\\braket": "\\left\\langle#1\\middle|#2\\right\\rangle"
+};
+
+function math_macros_for_post(item) {
+  return Object.assign({}, global_math_macros, item.math_macros || {});
+}
+
+function math_placeholders_present(html) {
+  return String(html || "").includes("math_source");
+}
+
+function post_uses_math(item) {
+  return item.uses_math === true || math_placeholders_present(item.body);
+}
+
+function render_katex(tex, display_mode, item, label) {
+  try {
+    return katex.renderToString(tex, {
+      displayMode: display_mode,
+      throwOnError: item.allow_math_errors !== true,
+      macros: math_macros_for_post(item)
+    });
+  } catch (error) {
+    const context = [
+      "Math render error in post: " + (item.title || item.slug || "unknown post"),
+      label ? "Equation label: " + label : "Equation label: none",
+      "TeX:",
+      tex,
+      "KaTeX error:",
+      error.message
+    ].join("\n");
+
+    throw new Error(context);
+  }
+}
+
+function render_inline_math(match, tex_attr) {
+  const tex = decode_attr(tex_attr);
+  const item = render_inline_math.current_item;
+  return '<span class="math_inline">' + render_katex(tex, false, item, "") + '</span>';
+}
+
+function render_display_math(match, tex_attr, label_attr) {
+  const tex = decode_attr(tex_attr);
+  const label = decode_attr(label_attr || "");
+  const item = render_display_math.current_item;
+  const rendered = render_katex(tex, true, item, label);
+
+  return [
+    '<figure class="equation">',
+    '  <div class="equation_body">' + rendered + '</div>',
+    label ? '  <figcaption class="equation_label">' + escape_html(label) + '</figcaption>' : '',
+    '</figure>'
+  ].filter(Boolean).join("\n");
+}
+
+function render_math_placeholders(html, item) {
+  render_inline_math.current_item = item;
+  render_display_math.current_item = item;
+
+  return String(html || "")
+      .replace(/<span class="math_source math_inline_source" data-tex="([^"]*)"><\/span>/g, render_inline_math)
+      .replace(/<figure class="math_source math_display_source" data-tex="([^"]*)" data-label="([^"]*)"><\/figure>/g, render_display_math);
+}
+
+// ============================================================================
+// Body preparation and build-time minimap HTML
+// ============================================================================
 
 function heading_slug(text, used) {
   let base = slug_text(text);
@@ -356,69 +488,20 @@ function minimap(headings, type) {
   ].join("\n");
 }
 
-function page_for_type(type) {
-  return "metadata/type/" + slug_text(type) + ".html";
+function post_headings(item, prepared) {
+  return [
+    {
+      level: 1,
+      id: "post_title",
+      text: item.title,
+      scroll_top: true
+    }
+  ].concat(prepared.headings);
 }
 
-function post_page(item) {
-  return "posts/" + item.slug + ".html";
-}
-
-function post_text_page(item) {
-  return "posts/" + item.slug + ".txt";
-}
-
-function valid_sidebar_key(key) {
-  return ["about", "essays", "guides", "blog", "tags", "archive"].includes(String(key || ""));
-}
-
-function normalise_sidebar_key(key) {
-  const value = String(key || "").trim();
-
-  return valid_sidebar_key(value) ? value : "";
-}
-
-function active_sidebar_for_type(type) {
-  const value = String(type || "").trim();
-
-  return labels[value] ? value : "";
-}
-
-function active_sidebar_for_metadata_field(field) {
-  if (!field) {
-    return "";
-  }
-
-  if (field.key === "tags") {
-    return "tags";
-  }
-
-  return "";
-}
-
-function active_sidebar_for_metadata_value(field, value) {
-  if (!field) {
-    return "";
-  }
-
-  if (field.key === "tags") {
-    return "tags";
-  }
-
-  if (field.key === "type") {
-    return active_sidebar_for_type(value && value.value);
-  }
-
-  return "";
-}
-
-function tag_page(tag) {
-  return "metadata/tags/" + tag_slug(tag) + ".html";
-}
-
-function linked_kicker(label, href) {
-  return '<p class="kicker"><a href="' + escape_html(href) + '">' + escape_html(label) + '</a></p>';
-}
+// ============================================================================
+// Breadcrumbs and page kickers
+// ============================================================================
 
 function breadcrumb_kicker(parts) {
   return '<p class="kicker breadcrumb_kicker">' + parts.map(function(part) {
@@ -496,140 +579,9 @@ function metadata_value_kicker(field, value) {
   ]);
 }
 
-function post_metadata_anchor(item) {
-  return "post_metadata_" + slug_text(item.slug || item.title);
-}
-
-function meta(item) {
-  const parts = [
-    item.date,
-    labels[item.type],
-    word_count_label(item)
-  ];
-
-  if (item.revised) {
-    parts.push("revised " + item.revised);
-  }
-
-  return parts.filter(Boolean).map(escape_html).join(" · ");
-}
-
-
-function post_effective_date(item) {
-  return item.revised || item.date || "";
-}
-
-function sort_posts_for_navigation(items) {
-  return [...items].sort(function(a, b) {
-    const date_difference =
-        new Date(post_effective_date(b)) - new Date(post_effective_date(a));
-
-    if (date_difference !== 0) {
-      return date_difference;
-    }
-
-    const title_difference = String(a.title || "").localeCompare(String(b.title || ""));
-
-    if (title_difference !== 0) {
-      return title_difference;
-    }
-
-    return String(a.slug || "").localeCompare(String(b.slug || ""));
-  });
-}
-
-function adjacent_posts(item) {
-  const ordered = sort_posts_for_navigation(shown_posts());
-  const index = ordered.findIndex(function(post) {
-    return post.slug === item.slug;
-  });
-
-  return {
-    newer: index > 0 ? ordered[index - 1] : null,
-    older: index >= 0 && index < ordered.length - 1 ? ordered[index + 1] : null
-  };
-}
-
-function post_navigation_meta(item) {
-  const date_label = item.revised
-      ? "revised " + item.revised
-      : item.date;
-
-  return [
-    date_label,
-    labels[item.type],
-    word_count_label(item)
-  ].filter(Boolean).map(escape_html).join(" · ");
-}
-
-function post_navigation_link(label, item) {
-  return [
-    '        <a class="post_nav_link" href="/' + post_page(item) + '">',
-    '          <span class="post_nav_label">' + escape_html(label) + '</span>',
-    '          <span class="post_nav_title">' + escape_html(item.title) + '</span>',
-    '          <span class="post_nav_meta">' + post_navigation_meta(item) + '</span>',
-    '        </a>'
-  ].join("\n");
-}
-
-function post_navigation(item) {
-  const adjacent = adjacent_posts(item);
-  const links = [];
-
-  if (adjacent.newer) {
-    links.push(post_navigation_link("Newer", adjacent.newer));
-  }
-
-  if (adjacent.older) {
-    links.push(post_navigation_link("Older", adjacent.older));
-  }
-
-  if (!links.length) {
-    return "";
-  }
-
-  const class_name = links.length === 1
-      ? "post_nav post_nav_single"
-      : "post_nav";
-
-  return [
-    '      <nav class="' + class_name + '" aria-label="Post navigation">',
-    links.join("\n"),
-    '      </nav>'
-  ].join("\n");
-}
-
-
-function post_downloads(item) {
-  return [
-    '      <a class="kicker post_downloads" href="/' + post_text_page(item) + '" download>',
-    '        <span class="post_downloads_text">DOWNLOAD .txt</span>',
-    "      </a>"
-  ].join("\n");
-}
-
-function decode_html_text(value) {
-  return String(value || "")
-      .replaceAll("&quot;", '"')
-      .replaceAll("&#34;", '"')
-      .replaceAll("&#39;", "'")
-      .replaceAll("&apos;", "'")
-      .replaceAll("&lt;", "<")
-      .replaceAll("&gt;", ">")
-      .replaceAll("&nbsp;", " ")
-      .replaceAll("&amp;", "&");
-}
-
-function text_clean(value) {
-  return decode_html_text(
-      String(value || "")
-          .replace(/<br\s*\/?\s*>/gi, "\n")
-          .replace(/<[^>]*>/g, " ")
-  )
-      .replace(/[ \t]+/g, " ")
-      .replace(/\s*\n\s*/g, "\n")
-      .trim();
-}
+// ============================================================================
+// Plain-text post export
+// ============================================================================
 
 function text_title_block(value) {
   const title = text_clean(value || "Untitled");
@@ -768,16 +720,9 @@ function post_text_export(item) {
   return sections.join("\n").replace(/\n{3,}/g, "\n\n") + "\n";
 }
 
-function humanise_meta_key(key) {
-  return String(key || "")
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .replace(/[_-]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .replace(/^./, function(char) {
-        return char.toUpperCase();
-      });
-}
+// ============================================================================
+// Metadata system
+// ============================================================================
 
 function metadata_value_empty(value) {
   if (value === null || value === undefined) {
@@ -1016,22 +961,6 @@ function metadata_value_entries(value) {
 
   const text = metadata_value_text(value);
   return text ? [text] : [];
-}
-
-function metadata_field_slug(key) {
-  return slug_text(key) || "metadata";
-}
-
-function metadata_field_page(field) {
-  return "metadata/" + field.slug + ".html";
-}
-
-function metadata_value_slug(value) {
-  return slug_text(value.value) || "value";
-}
-
-function metadata_field_value_page(field, value) {
-  return "metadata/" + field.slug + "/" + metadata_value_slug(value) + ".html";
 }
 
 function metadata_value_key(value) {
@@ -1315,6 +1244,7 @@ const by_post_metadata_excluded_keys = new Set([
   card heading has already carried title/date/type/word count: tags first,
   then abstract, then remaining additional fields in their normal order.
 */
+
 function by_post_metadata_fields(item) {
   return public_metadata_fields(item)
       .filter(function(field) {
@@ -1389,6 +1319,85 @@ function post_footer_metadata(item) {
   ].join("\n");
 }
 
+// ============================================================================
+// Cards, post navigation, and post page components
+// ============================================================================
+
+function post_metadata_anchor(item) {
+  return "post_metadata_" + slug_text(item.slug || item.title);
+}
+
+function meta(item) {
+  const parts = [
+    item.date,
+    labels[item.type],
+    word_count_label(item)
+  ];
+
+  if (item.revised) {
+    parts.push("revised " + item.revised);
+  }
+
+  return parts.filter(Boolean).map(escape_html).join(" · ");
+}
+
+function post_navigation_meta(item) {
+  const date_label = item.revised
+      ? "revised " + item.revised
+      : item.date;
+
+  return [
+    date_label,
+    labels[item.type],
+    word_count_label(item)
+  ].filter(Boolean).map(escape_html).join(" · ");
+}
+
+function post_navigation_link(label, item) {
+  return [
+    '        <a class="post_nav_link" href="/' + post_page(item) + '">',
+    '          <span class="post_nav_label">' + escape_html(label) + '</span>',
+    '          <span class="post_nav_title">' + escape_html(item.title) + '</span>',
+    '          <span class="post_nav_meta">' + post_navigation_meta(item) + '</span>',
+    '        </a>'
+  ].join("\n");
+}
+
+function post_navigation(item) {
+  const adjacent = adjacent_posts(item);
+  const links = [];
+
+  if (adjacent.newer) {
+    links.push(post_navigation_link("Newer", adjacent.newer));
+  }
+
+  if (adjacent.older) {
+    links.push(post_navigation_link("Older", adjacent.older));
+  }
+
+  if (!links.length) {
+    return "";
+  }
+
+  const class_name = links.length === 1
+      ? "post_nav post_nav_single"
+      : "post_nav";
+
+  return [
+    '      <nav class="' + class_name + '" aria-label="Post navigation">',
+    links.join("\n"),
+    '      </nav>'
+  ].join("\n");
+}
+
+function post_downloads(item) {
+  return [
+    '      <a class="kicker post_downloads" href="/' + post_text_page(item) + '" download>',
+    '        <span class="post_downloads_text">DOWNLOAD .txt</span>',
+    "      </a>"
+  ].join("\n");
+}
+
 function tag_links(item) {
   const tags = item.tags || [];
 
@@ -1416,6 +1425,54 @@ function post_card(item) {
     tag_links(item),
     "    </article>"
   ].join("\n");
+}
+
+// ============================================================================
+// Sidebar and HTML shell
+// ============================================================================
+
+function valid_sidebar_key(key) {
+  return ["about", "essays", "guides", "blog", "tags", "archive"].includes(String(key || ""));
+}
+
+function normalise_sidebar_key(key) {
+  const value = String(key || "").trim();
+
+  return valid_sidebar_key(value) ? value : "";
+}
+
+function active_sidebar_for_type(type) {
+  const value = String(type || "").trim();
+
+  return labels[value] ? value : "";
+}
+
+function active_sidebar_for_metadata_field(field) {
+  if (!field) {
+    return "";
+  }
+
+  if (field.key === "tags") {
+    return "tags";
+  }
+
+  return "";
+}
+
+function active_sidebar_for_metadata_value(field, value) {
+  if (!field) {
+    return "";
+  }
+
+  if (field.key === "tags") {
+    return "tags";
+  }
+
+  if (field.key === "type") {
+    return active_sidebar_for_type(value && value.value);
+  }
+
+  return "";
 }
 
 function sidebar_link(label, href, key, active_sidebar) {
@@ -1447,10 +1504,6 @@ function sidebar(extra_html, active_sidebar) {
   ].filter(function(line) {
     return line !== "";
   }).join("\n");
-}
-
-function feed_page_for_type(type) {
-  return type + "/feed.xml";
 }
 
 function feed_discovery_html(type) {
@@ -1543,6 +1596,10 @@ function shell(options) {
   }).join("\n") + "\n";
 }
 
+// ============================================================================
+// Static files and write helpers
+// ============================================================================
+
 function write_file(file, content) {
   const full = path.join(out, file);
   const final_content = add_canonical_to_html(file, content);
@@ -1553,7 +1610,6 @@ function write_file(file, content) {
 function copy_file(file) {
   fs.copyFileSync(path.join(root, file), path.join(out, file));
 }
-
 
 function copy_directory(source, destination) {
   fs.mkdirSync(destination, { recursive: true });
@@ -1581,6 +1637,10 @@ function copy_katex_assets() {
   fs.copyFileSync(path.join(katex_dist, "katex.min.css"), path.join(out, "katex", "katex.min.css"));
   copy_directory(path.join(katex_dist, "fonts"), path.join(out, "katex", "fonts"));
 }
+
+// ============================================================================
+// Validation
+// ============================================================================
 
 function validate_posts(items) {
   const slugs = new Set();
@@ -1611,151 +1671,9 @@ function validate_posts(items) {
   });
 }
 
-function all_tags(items) {
-  const tags = new Map();
-
-  items.forEach(function(item) {
-    (item.tags || []).forEach(function(tag) {
-      const slug = tag_slug(tag);
-
-      if (!slug) {
-        return;
-      }
-
-      if (!tags.has(slug)) {
-        tags.set(slug, {
-          name: tag,
-          slug: slug,
-          posts: []
-        });
-      }
-
-      tags.get(slug).posts.push(item);
-    });
-  });
-
-  return [...tags.values()];
-}
-
-function tag_count_label(count) {
-  if (count === 1) {
-    return "1 post";
-  }
-
-  return count + " posts";
-}
-
-function tag_latest_date(tag) {
-  const latest = sort_by_date(tag.posts)[0];
-
-  if (!latest) {
-    return "";
-  }
-
-  return latest.date;
-}
-
-function tag_type_label(tag) {
-  const type_order = Object.keys(labels);
-  const found = new Set(tag.posts.map(function(item) {
-    return item.type;
-  }));
-
-  return type_order.filter(function(type) {
-    return found.has(type);
-  }).map(function(type) {
-    return labels[type].toLowerCase();
-  }).join(" / ");
-}
-
-function tag_meta(tag) {
-  const parts = [
-    tag_count_label(tag.posts.length),
-    "latest " + tag_latest_date(tag),
-    tag_type_label(tag)
-  ];
-
-  return parts.filter(Boolean).map(escape_html).join(" · ");
-}
-
-function sort_tags_by_density(tags) {
-  return [...tags].sort(function(a, b) {
-    const count_difference = b.posts.length - a.posts.length;
-
-    if (count_difference !== 0) {
-      return count_difference;
-    }
-
-    return a.name.localeCompare(b.name);
-  });
-}
-
-function sort_tags_alphabetically(tags) {
-  return [...tags].sort(function(a, b) {
-    return a.name.localeCompare(b.name);
-  });
-}
-
-function tag_group_letter(tag) {
-  const first = String(tag.name || "").trim().charAt(0).toUpperCase();
-
-  if (/^[A-Z0-9]$/.test(first)) {
-    return first;
-  }
-
-  return "#";
-}
-
-function tag_card(tag) {
-  return [
-    '        <a class="tag_card" href="/tag/' + tag.slug + '.html">',
-    "          <small>" + tag_meta(tag) + "</small>",
-    "          <span>" + escape_html(tag.name) + "</span>",
-    "        </a>"
-  ].join("\n");
-}
-
-function tag_index(tags) {
-  if (!tags.length) {
-    return '      <p class="muted">No tags yet.</p>';
-  }
-
-  if (tags.length < 20) {
-    return [
-      '      <section class="tag_index">',
-      sort_tags_by_density(tags).map(tag_card).join("\n"),
-      "      </section>"
-    ].join("\n");
-  }
-
-  const grouped = new Map();
-
-  sort_tags_alphabetically(tags).forEach(function(tag) {
-    const letter = tag_group_letter(tag);
-
-    if (!grouped.has(letter)) {
-      grouped.set(letter, []);
-    }
-
-    grouped.get(letter).push(tag);
-  });
-
-  return [
-    '      <section class="tag_index tag_index_grouped">',
-    [...grouped.entries()].map(function(entry) {
-      const letter = entry[0];
-      const group_tags = entry[1];
-
-      return [
-        '        <section class="tag_group">',
-        "          <h2>" + escape_html(letter) + "</h2>",
-        group_tags.map(tag_card).join("\n"),
-        "        </section>"
-      ].join("\n");
-    }).join("\n"),
-    "      </section>"
-  ].join("\n");
-}
+// ============================================================================
+// Page builders
+// ============================================================================
 
 function build_home(items) {
   const latest = sort_by_date(latest_by_title(items)).slice(0, 4);
@@ -1855,63 +1773,98 @@ function build_404() {
   }));
 }
 
-function sitemap_entry(file, lastmod) {
-  const lines = [
-    "  <url>",
-    "    <loc>" + escape_xml(absolute_url(file)) + "</loc>"
-  ];
-
-  if (lastmod) {
-    lines.push("    <lastmod>" + escape_xml(lastmod) + "</lastmod>");
-  }
-
-  lines.push("  </url>");
-
-  return lines.join("\n");
-}
-
-function build_sitemap(items) {
+function build_metadata_page(items) {
   const fields = all_metadata_fields(items);
-  const entries = [];
 
-  entries.push(sitemap_entry("index.html"));
-
-  Object.keys(labels).forEach(function(type) {
-    entries.push(sitemap_entry(page_for_type(type)));
-  });
-
-  entries.push(sitemap_entry("archive.html"));
-  entries.push(sitemap_entry("feed.xml"));
-
-  Object.keys(labels).forEach(function(type) {
-    entries.push(sitemap_entry(feed_page_for_type(type)));
-  });
-
-  entries.push(sitemap_entry("metadata.html"));
+  write_file("metadata.html", shell({
+    title: "anodyne avenue - metadata",
+    description: "A public index of post metadata across the archive.",
+    content: [
+      '      ' + metadata_kicker(),
+      "      <h1>Metadata</h1>",
+      '      <p class="muted intro">A public index of post metadata across the archive: fields, entries, counts, and the posts attached to them.</p>',
+      "",
+      metadata_field_index(fields),
+      "",
+      "      <h2>By post</h2>",
+      '      <p class="muted metadata_group_meta">Each visible post and its public metadata, excluding the post body.</p>',
+      metadata_post_index(items)
+    ].join("\n")
+  }));
 
   fields.forEach(function(field) {
-    entries.push(sitemap_entry(metadata_field_page(field), metadata_field_latest(field)));
+    write_file(metadata_field_page(field), shell({
+      title: field.label.toLowerCase() + " metadata - anodyne avenue",
+      description: "Metadata entries for " + field.label + ".",
+      active_sidebar: active_sidebar_for_metadata_field(field),
+      content: [
+        '      ' + metadata_field_kicker(field),
+        "      <h1>" + escape_html(field.label) + "</h1>",
+        metadata_field_intro(field),
+        "",
+        metadata_field_section(field)
+      ].join("\n")
+    }));
 
     if (should_generate_metadata_value_page(field)) {
       metadata_field_values(field).forEach(function(value) {
-        entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
+        const label = metadata_value_label(field, value);
+
+        write_file(metadata_field_value_page(field, value), shell({
+          title: label + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
+          description: "Posts using " + field.label + ": " + label + ".",
+          active_sidebar: active_sidebar_for_metadata_value(field, value),
+          content: metadata_value_page_content(field, value)
+        }));
       });
     }
   });
-
-  sort_by_date(items).forEach(function(item) {
-    entries.push(sitemap_entry(post_page(item), item.revised || item.date));
-  });
-
-  const xml = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    entries.join("\n"),
-    "</urlset>"
-  ].join("\n");
-
-  write_file("sitemap.xml", xml);
 }
+
+
+function build_posts(items) {
+  items.forEach(function(item) {
+    const prepared = prepare_body(item.body);
+    const rendered_body = render_math_placeholders(prepared.html, item);
+    const headings = post_headings(item, prepared);
+
+    write_file(post_text_page(item), post_text_export(item));
+
+    write_file(post_page(item), shell({
+      title: item.title + " - anodyne avenue",
+      description: item.abstract,
+      feed_type: item.type,
+      uses_math: post_uses_math(item),
+      active_sidebar: item.sidebar_key || active_sidebar_for_type(item.type),
+      minimap: minimap(headings, item.type),
+      content: [
+        '    <article class="post">',
+        '      ' + post_kicker(item),
+        '      <header>',
+        '        <h1 id="post_title">' + escape_html(item.title) + "</h1>",
+        "        <p><small>" + meta(item) + "</small></p>",
+        '        <p class="abstract">' + escape_html(item.abstract) + "</p>",
+        tag_links(item),
+        "      </header>",
+        "",
+        '      <section class="body">',
+        rendered_body,
+        "      </section>",
+        "",
+        post_downloads(item),
+        "",
+        post_navigation(item),
+        "",
+        post_footer_metadata(item),
+        "    </article>"
+      ].join("\n")
+    }));
+  });
+}
+
+// ============================================================================
+// RSS feeds
+// ============================================================================
 
 function rss_date(value) {
   const date = new Date(String(value || "") + "T00:00:00Z");
@@ -1935,10 +1888,6 @@ function feed_description(item) {
   }
 
   return parts.join(" ");
-}
-
-function feed_file_for_type(type) {
-  return type ? feed_page_for_type(type) : "feed.xml";
 }
 
 function build_feed(items, options) {
@@ -2003,6 +1952,68 @@ function build_feeds(items) {
       link: page_for_type(type)
     });
   });
+}
+
+// ============================================================================
+// Sitemap, robots, search index, and discovery files
+// ============================================================================
+
+function sitemap_entry(file, lastmod) {
+  const lines = [
+    "  <url>",
+    "    <loc>" + escape_xml(absolute_url(file)) + "</loc>"
+  ];
+
+  if (lastmod) {
+    lines.push("    <lastmod>" + escape_xml(lastmod) + "</lastmod>");
+  }
+
+  lines.push("  </url>");
+
+  return lines.join("\n");
+}
+
+function build_sitemap(items) {
+  const fields = all_metadata_fields(items);
+  const entries = [];
+
+  entries.push(sitemap_entry("index.html"));
+
+  Object.keys(labels).forEach(function(type) {
+    entries.push(sitemap_entry(page_for_type(type)));
+  });
+
+  entries.push(sitemap_entry("archive.html"));
+  entries.push(sitemap_entry("feed.xml"));
+
+  Object.keys(labels).forEach(function(type) {
+    entries.push(sitemap_entry(feed_page_for_type(type)));
+  });
+
+  entries.push(sitemap_entry("metadata.html"));
+
+  fields.forEach(function(field) {
+    entries.push(sitemap_entry(metadata_field_page(field), metadata_field_latest(field)));
+
+    if (should_generate_metadata_value_page(field)) {
+      metadata_field_values(field).forEach(function(value) {
+        entries.push(sitemap_entry(metadata_field_value_page(field, value), metadata_latest_date(value.posts)));
+      });
+    }
+  });
+
+  sort_by_date(items).forEach(function(item) {
+    entries.push(sitemap_entry(post_page(item), item.revised || item.date));
+  });
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    entries.join("\n"),
+    "</urlset>"
+  ].join("\n");
+
+  write_file("sitemap.xml", xml);
 }
 
 const search_index_metadata_excluded_keys = new Set([
@@ -2156,136 +2167,9 @@ function build_robots() {
   ].join("\n"));
 }
 
-function open_graph_meta(item) {
-  const title = item
-      ? item.title + " - anodyne avenue"
-      : "anodyne avenue";
-
-  const description = item
-      ? item.abstract
-      : "An anonymous, text-first archive of essays, guides, and blog posts.";
-
-  const url = item
-      ? absolute_url(post_page(item))
-      : absolute_url("index.html");
-
-  return [
-    '  <meta property="og:type" content="' + (item ? "article" : "website") + '">',
-    '  <meta property="og:title" content="' + escape_html(title) + '">',
-    '  <meta property="og:description" content="' + escape_html(description) + '">',
-    '  <meta property="og:url" content="' + escape_html(url) + '">',
-    '  <meta property="og:site_name" content="anodyne avenue">',
-    '  <meta name="twitter:card" content="summary">'
-  ].join("\n");
-}
-
-function build_metadata_page(items) {
-  const fields = all_metadata_fields(items);
-
-  write_file("metadata.html", shell({
-    title: "anodyne avenue - metadata",
-    description: "A public index of post metadata across the archive.",
-    content: [
-      '      ' + metadata_kicker(),
-      "      <h1>Metadata</h1>",
-      '      <p class="muted intro">A public index of post metadata across the archive: fields, entries, counts, and the posts attached to them.</p>',
-      "",
-      metadata_field_index(fields),
-      "",
-      "      <h2>By post</h2>",
-      '      <p class="muted metadata_group_meta">Each visible post and its public metadata, excluding the post body.</p>',
-      metadata_post_index(items)
-    ].join("\n")
-  }));
-
-  fields.forEach(function(field) {
-    write_file(metadata_field_page(field), shell({
-      title: field.label.toLowerCase() + " metadata - anodyne avenue",
-      description: "Metadata entries for " + field.label + ".",
-      active_sidebar: active_sidebar_for_metadata_field(field),
-      content: [
-        '      ' + metadata_field_kicker(field),
-        "      <h1>" + escape_html(field.label) + "</h1>",
-        metadata_field_intro(field),
-        "",
-        metadata_field_section(field)
-      ].join("\n")
-    }));
-
-    if (should_generate_metadata_value_page(field)) {
-      metadata_field_values(field).forEach(function(value) {
-        const label = metadata_value_label(field, value);
-
-        write_file(metadata_field_value_page(field, value), shell({
-          title: label + " - " + field.label.toLowerCase() + " metadata - anodyne avenue",
-          description: "Posts using " + field.label + ": " + label + ".",
-          active_sidebar: active_sidebar_for_metadata_value(field, value),
-          content: metadata_value_page_content(field, value)
-        }));
-      });
-    }
-  });
-}
-
-
-function build_tag_pages(items) {
-  /*
-    Tags are now generated as normal metadata entry pages under
-    /metadata/tags/. This function remains as a no-op so older build flow
-    names stay understandable.
-  */
-}
-
-function post_headings(item, prepared) {
-  return [
-    {
-      level: 1,
-      id: "post_title",
-      text: item.title,
-      scroll_top: true
-    }
-  ].concat(prepared.headings);
-}
-
-function build_posts(items) {
-  items.forEach(function(item) {
-    const prepared = prepare_body(item.body);
-    const rendered_body = render_math_placeholders(prepared.html, item);
-    const headings = post_headings(item, prepared);
-
-    write_file(post_text_page(item), post_text_export(item));
-
-    write_file(post_page(item), shell({
-      title: item.title + " - anodyne avenue",
-      description: item.abstract,
-      feed_type: item.type,
-      uses_math: post_uses_math(item),
-      active_sidebar: item.sidebar_key || active_sidebar_for_type(item.type),
-      minimap: minimap(headings, item.type),
-      content: [
-        '    <article class="post">',
-        '      ' + post_kicker(item),
-        '      <header>',
-        '        <h1 id="post_title">' + escape_html(item.title) + "</h1>",
-        "        <p><small>" + meta(item) + "</small></p>",
-        '        <p class="abstract">' + escape_html(item.abstract) + "</p>",
-        tag_links(item),
-        "      </header>",
-        "",
-        '      <section class="body">',
-        rendered_body,
-        "      </section>",
-        "",
-        post_downloads(item),
-        "",
-        post_navigation(item),
-        "",
-        post_footer_metadata(item),
-        "    </article>"
-      ].join("\n")
-    }));
-  });
-}
+// ============================================================================
+// Build orchestration
+// ============================================================================
 
 function build() {
   const visible = shown_posts();
@@ -2313,7 +2197,6 @@ function build() {
   build_archive(visible);
   build_public_version();
   build_metadata_page(visible);
-  build_tag_pages(visible);
   build_posts(visible);
   build_404();
   build_feeds(visible);

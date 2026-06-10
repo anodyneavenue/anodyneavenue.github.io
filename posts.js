@@ -115,8 +115,8 @@ const posts = [
     // edition: "1st edition",
     sidebar_key: "about",
     // breadcrumb_tail: "ABOUT",
-    tags: ["Welcome!"],
-    abstract: "About Anodyne Avenue as an independent publication and digital archive.",
+    // tags: ["Welcome!"],
+    abstract: "The 'About' section for Anodyne Avenue.",
     body: html([
       '<p>Hello there, and welcome! <a href="/anodyneavenue.github.io">anodyneavenue.github.io</a> is an independent publication and digital archive of essays, guides, research notes, and long-form investigations.</p>',
       '<p>This site is written and maintained by a single author under the pen name Anodyne Avenue. It exists as a place to explore questions in science, mathematics, technology, philosophy, history, and other subjects that reward deeper examination than a typical article, social-media post, or news cycle can provide.</p>',
