@@ -102,8 +102,7 @@ p {
   cursor: pointer;
 }
 
-#toggle:hover,
-.back:hover {
+#toggle:hover {
   background: var(--panel);
 }
 
@@ -196,28 +195,6 @@ main {
   margin: 0 auto;
 }
 
-.back {
-  position: fixed;
-  top: .8rem;
-  left: calc(var(--side) + .8rem);
-  z-index: 40;
-  width: 2.55rem;
-  height: 2.55rem;
-  border: 1px solid var(--line);
-  border-radius: .4rem;
-  background: var(--bg);
-  color: var(--fg);
-  font: inherit;
-  font-size: 1.65rem;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition: left .18s ease, background .12s ease;
-}
-
-.side_closed .back {
-  left: 3.75rem;
-}
 
 .kicker,
 small,
@@ -803,10 +780,6 @@ main > .muted {
     font-size: .8rem;
     letter-spacing: .06em;
   }
-
-  .back {
-    left: calc(var(--side) + .7rem);
-  }
 }
 */
 
@@ -832,8 +805,7 @@ main > .muted {
     transform: translateX(0);
   }
 
-  #toggle,
-  .back {
+  #toggle {
     top: 1.3rem;
     width: 3rem;
     height: 3rem;
@@ -843,13 +815,6 @@ main > .muted {
   #toggle {
     left: calc(1.15rem + .75rem);
     font-size: 1.45rem;
-  }
-
-  .back,
-  .side_closed .back {
-    left: auto;
-    right: calc(1.15rem + .75rem);
-    font-size: 1.95rem;
   }
 
   .title {

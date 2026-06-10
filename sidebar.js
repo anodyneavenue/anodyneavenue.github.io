@@ -147,7 +147,7 @@ function handle_breakpoint_change(event) {
 function current_sidebar_key_from_pathname(pathname) {
   const path = String(pathname || "/").replace(/\/+$/, "") || "/";
 
-  if (path === "/about.html" || path === "/about") {
+  if (path === "/posts/about.html" || path === "/posts/about") {
     return "about";
   }
 
@@ -203,24 +203,12 @@ function highlight_sidebar_link() {
   });
 }
 
-function go_back() {
-  if (history.length > 1) {
-    history.back();
-    return;
-  }
-
-  location.href = "/";
-}
 
 
 restore_sidebar_state();
 highlight_sidebar_link();
 
 document.getElementById("toggle")?.addEventListener("click", toggle_sidebar);
-
-document.querySelectorAll(".back").forEach(function(item) {
-  item.addEventListener("click", go_back);
-});
 
 document.addEventListener("click", close_mobile_sidebar_after_internal_link, true);
 document.addEventListener("click", close_mobile_sidebar);
