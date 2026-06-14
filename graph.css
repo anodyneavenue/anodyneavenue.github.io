@@ -1,0 +1,931 @@
+.metadata_graph_app {
+  --graph-essay-start: var(--map-essay-start);
+  --graph-essay-end: var(--map-essay-end);
+  --graph-guide-start: var(--map-guide-start);
+  --graph-guide-end: var(--map-guide-end);
+  --graph-blog-start: var(--map-blog-start);
+  --graph-blog-end: var(--map-blog-end);
+
+  --graph-colour-start: var(--panel);
+  --graph-colour-end: var(--line);
+
+  --graph-viewport-height: min(76vh, 50rem);
+  --graph-viewport-min-height: 32rem;
+  --graph-row-header-width: clamp(12rem, 24vw, 18rem);
+  --graph-column-header-width: 10rem;
+
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 2rem;
+  margin-left: 0;
+  transform: none;
+}
+
+.graph_controls {
+  position: sticky;
+  top: .8rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .85rem 2rem;
+  padding: .75rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--panel);
+  box-shadow: 0 .35rem 1.2rem rgba(0, 0, 0, .08);
+}
+
+.graph_controls_group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .65rem;
+  min-width: 0;
+}
+
+.graph_controls_compare {
+  flex: 1 1 auto;
+}
+
+.graph_controls_threshold {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.graph_controls label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.graph_controls select,
+.graph_controls input,
+.graph_toolbar button {
+  border: 1px solid var(--line);
+  border-radius: .4rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.graph_controls select,
+.graph_controls input {
+  padding: .32rem .45rem;
+}
+
+.graph_controls input {
+  width: 5.5rem;
+}
+
+.graph_toolbar button {
+  padding: .34rem .55rem;
+  cursor: pointer;
+}
+
+.graph_toolbar button:hover,
+.graph_toolbar button:focus-visible {
+  background: var(--line);
+}
+
+.graph_summary {
+  margin-bottom: 0;
+}
+
+.graph_controls,
+.graph_summary,
+.graph_matrix_panel {
+  width: var(--graph-analysis-width, 100%);
+  margin-left: calc((var(--graph-main-width, 100%) - var(--graph-analysis-width, 100%)) / 2);
+}
+
+.graph_matrix_panel {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+  padding-top: .75rem;
+}
+
+.graph_matrix_panel_header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .5rem .8rem;
+  margin-bottom: .5rem;
+}
+
+.graph_matrix_panel_header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.graph_matrix_panel_header p {
+  margin: 0;
+  font-size: .82rem;
+}
+
+.graph_workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  width: var(--graph-workspace-width, 100%);
+  margin-left: calc((var(--graph-main-width, 100%) - var(--graph-workspace-width, 100%)) / 2);
+}
+
+.graph_view,
+.graph_detail_shell {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+}
+
+.graph_detail_shell {
+  align-self: stretch;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  overscroll-behavior: auto;
+  padding: .85rem 0 0;
+}
+
+.graph_detail {
+  min-width: 0;
+  position: static;
+  padding: 0;
+}
+
+@media (min-width: 981px) {
+  .graph_workspace {
+    grid-template-columns: minmax(0, 1fr) clamp(13rem, 23%, 16rem);
+  }
+
+  .graph_detail_shell {
+    max-height: calc(var(--graph-viewport-height) + 4rem);
+    min-height: var(--graph-viewport-min-height);
+    overflow: auto;
+    padding-top: .75rem;
+  }
+}
+
+@media (max-width: 980px) {
+  .graph_workspace,
+  .graph_controls,
+  .graph_summary,
+  .graph_matrix_panel {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+.graph_detail h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.graph_detail_link {
+  font-weight: 700;
+}
+
+.graph_detail_link:hover,
+.graph_matrix a:hover {
+  text-decoration: underline;
+}
+
+.graph_matrix_wrap {
+  width: 100%;
+  max-height: 15rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--bg);
+}
+
+.graph_matrix {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .82rem;
+}
+
+.graph_matrix th,
+.graph_matrix td {
+  padding: .38rem .45rem;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.graph_matrix th {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.graph_matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--line);
+}
+
+.graph_matrix tbody th,
+.graph_matrix thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--bg);
+  text-align: center;
+}
+
+.graph_matrix tbody th {
+  z-index: 1;
+}
+
+.graph_matrix_header {
+  cursor: pointer;
+  transition: opacity .12s ease, background .12s ease, color .12s ease, box-shadow .12s ease;
+}
+
+.graph_matrix_header:hover,
+.graph_matrix_header:focus-visible {
+  background: var(--panel);
+  color: var(--fg);
+  outline: none;
+}
+
+.graph_matrix_header_link {
+  display: inline-flex;
+  max-width: var(--graph-column-header-width);
+  min-width: 0;
+  border-radius: .25rem;
+  color: inherit;
+  font-weight: 700;
+  vertical-align: bottom;
+}
+
+.graph_matrix_header_text {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph_matrix thead th:first-child,
+.graph_matrix tbody th {
+  width: var(--graph-row-header-width);
+  min-width: var(--graph-row-header-width);
+  max-width: var(--graph-row-header-width);
+}
+
+.graph_matrix tbody .graph_matrix_header_link {
+  max-width: calc(var(--graph-row-header-width) - .9rem);
+  justify-content: center;
+}
+
+.graph_matrix_header_link:hover,
+.graph_matrix_header_link:focus-visible {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: .12em;
+}
+
+.graph_matrix_header.is_selected,
+.graph_matrix_header.is_connected {
+  color: var(--fg);
+  background: var(--panel);
+}
+
+.graph_matrix_header.is_selected {
+  box-shadow: inset 0 0 0 1px var(--fg);
+}
+
+.graph_matrix_header.is_dimmed {
+  opacity: .36;
+}
+
+.graph_matrix_cell {
+  min-width: 2.2rem;
+  padding: .25rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .12s ease, background .12s ease, border-color .12s ease;
+}
+
+.graph_matrix_cell:hover,
+.graph_matrix_cell:focus-visible,
+.graph_matrix_cell.is_connected {
+  background: var(--line);
+}
+
+.graph_matrix_cell.is_selected {
+  border-color: var(--fg);
+  background: var(--line);
+}
+
+.graph_matrix_cell.is_dimmed {
+  opacity: .22;
+}
+
+.graph_matrix_empty {
+  color: var(--muted);
+  opacity: .55;
+}
+
+.graph_matrix_zero {
+  opacity: .68;
+  font-weight: 700;
+}
+
+.graph_force {
+  display: grid;
+  gap: .65rem;
+  padding-top: .75rem;
+}
+
+.graph_toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+}
+
+.graph_zoom_label {
+  min-width: 3.5rem;
+  padding: .34rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: .4rem;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.graph_viewport {
+  position: relative;
+  width: 100%;
+  height: var(--graph-viewport-height);
+  min-height: var(--graph-viewport-min-height);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: .55rem;
+  background:
+      radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--muted) 18%, transparent) 1px, transparent 0),
+      var(--panel);
+  background-size: 1.2rem 1.2rem;
+}
+
+.graph_canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.graph_canvas.is_panning {
+  cursor: grabbing;
+}
+
+.graph_scene {
+  transform-origin: 0 0;
+}
+
+.graph_force_edge_hit {
+  stroke: transparent;
+  stroke-linecap: round;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.graph_force_edge {
+  stroke: var(--muted);
+  stroke-linecap: round;
+  stroke-opacity: .24;
+  pointer-events: stroke;
+  cursor: pointer;
+  transition: stroke-opacity .12s ease, opacity .12s ease, stroke-width .12s ease;
+}
+
+.graph_force_edge:hover,
+.graph_force_edge.is_connected {
+  stroke: var(--fg);
+  stroke-opacity: .55;
+}
+
+.graph_force_edge.is_selected {
+  stroke: var(--fg);
+  stroke-opacity: .92;
+}
+
+.graph_force_edge.graph_edge_same_title {
+  stroke-dasharray: 4 3;
+  stroke-opacity: .32;
+}
+
+.graph_force_edge.graph_edge_same_title.is_connected,
+.graph_force_edge.graph_edge_same_title.is_selected {
+  stroke-dasharray: 4 3;
+  stroke-opacity: .75;
+}
+
+.graph_force_edge_label.graph_edge_same_title {
+  font-weight: 700;
+}
+
+.graph_force_edge.is_dimmed,
+.graph_force_edge_hit.is_dimmed {
+  opacity: .14;
+}
+
+.graph_force_node {
+  cursor: grab;
+  outline: none;
+}
+
+.graph_force_node.is_dragging {
+  cursor: grabbing;
+}
+
+.graph_force_node_circle {
+  fill: var(--bg);
+  stroke: var(--fg);
+  stroke-width: 1.35;
+  transition: fill .12s ease, stroke-width .12s ease, opacity .12s ease, transform .12s ease;
+}
+
+.graph_force_node_x .graph_force_node_circle {
+  stroke-dasharray: 0;
+}
+
+.graph_force_node_y .graph_force_node_circle {
+  stroke-dasharray: 2.5 2;
+}
+
+.graph_force_node:hover .graph_force_node_circle,
+.graph_force_node:focus-visible .graph_force_node_circle,
+.graph_force_node.is_connected .graph_force_node_circle {
+  fill: var(--line);
+}
+
+.graph_force_node.is_selected .graph_force_node_circle {
+  fill: var(--line);
+  stroke-width: 2.4;
+}
+
+.graph_force_node.is_dimmed {
+  opacity: .24;
+}
+
+.graph_force_node_label,
+.graph_force_node_count {
+  fill: var(--fg);
+  paint-order: stroke;
+  stroke: var(--panel);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity .12s ease;
+}
+
+.graph_force_node_label {
+  font-size: .78rem;
+  font-weight: 500;
+}
+
+.graph_force_node_count {
+  fill: var(--muted);
+  font-size: .66rem;
+  font-weight: 400;
+}
+
+.graph_hint {
+  margin: 0;
+  font-size: .82rem;
+}
+
+.graph_post_list {
+  display: grid;
+  gap: 0;
+  margin: .75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.graph_post_list li {
+  min-width: 0;
+  border-top: 1px solid var(--line);
+}
+
+.graph_post_list li:first-child {
+  border-top: 0;
+}
+
+.graph_detail_card {
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+  padding: .55rem .65rem;
+  border: 0;
+  border-radius: .4rem;
+  background: transparent;
+  text-decoration: none;
+  transition: background .14s ease;
+}
+
+.graph_detail_card:hover,
+.graph_detail_card:active,
+.graph_detail_card:focus-visible {
+  background: var(--panel);
+  text-decoration: none;
+  outline: none;
+}
+
+.graph_detail_card:hover .graph_detail_card_title,
+.graph_detail_card:active .graph_detail_card_title,
+.graph_detail_card:focus-visible .graph_detail_card_title {
+  text-decoration: underline;
+}
+
+.graph_detail_card_title {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.graph_detail_card_meta {
+  display: block;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+
+@supports not (background: color-mix(in srgb, #000 10%, transparent)) {
+  .graph_viewport {
+    background: var(--panel);
+  }
+}
+
+@media (max-width: 760px) {
+  .metadata_graph_app {
+    width: 100%;
+    margin-left: 0;
+    transform: none;
+  }
+
+  .graph_workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .graph_detail_shell {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .graph_detail {
+    position: static;
+  }
+
+  .graph_viewport {
+    height: 28rem;
+    min-height: 24rem;
+  }
+
+  .graph_controls {
+    top: calc(.8rem + 2.55rem + .65rem);
+  }
+
+  .graph_controls_threshold {
+    margin-left: 0;
+  }
+
+  .graph_controls label {
+    width: 100%;
+  }
+}
+
+/* Consolidated graph interaction/layout refinements */
+main.graph_page_main {
+  --graph-main-width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
+  --graph-analysis-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+  --graph-workspace-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+}
+
+body.side_closed main.graph_page_main {
+  --graph-main-width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
+  --graph-analysis-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+  --graph-workspace-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+}
+
+.graph_matrix thead th {
+  z-index: 5;
+}
+
+.graph_matrix tbody th {
+  z-index: 4;
+}
+
+.graph_matrix thead th:first-child {
+  z-index: 6;
+}
+
+.graph_matrix_header.is_dimmed {
+  opacity: 1;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.graph_matrix_header.is_dimmed .graph_matrix_header_link {
+  opacity: .72;
+}
+
+.graph_matrix_cell.is_filtered {
+  opacity: .34;
+  cursor: not-allowed;
+}
+
+.graph_matrix_cell.is_filtered:hover,
+.graph_matrix_cell.is_filtered:focus-visible {
+  background: var(--panel);
+}
+
+.graph_force_node.is_filtered,
+.graph_force_edge.is_filtered,
+.graph_force_edge_hit.is_filtered,
+.graph_force_edge_label.is_filtered {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.graph_force_edge_hit,
+.graph_force_edge {
+  pointer-events: none;
+}
+
+.graph_edges_interactive .graph_force_edge_hit,
+.graph_edges_interactive .graph_force_edge {
+  pointer-events: stroke;
+}
+
+.graph_force_edge_label {
+  fill: var(--fg);
+  paint-order: stroke;
+  stroke: var(--panel);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  font-weight: 600;
+  transition: opacity .12s ease;
+}
+
+.graph_has_colour.graph_detail {
+  border-top: 2px solid var(--graph-colour-end, var(--line));
+  padding-top: .75rem;
+}
+
+.graph_force_node.graph_has_colour .graph_force_node_circle {
+  fill: var(--graph-colour-start, var(--panel));
+  stroke: var(--graph-colour-end, var(--line));
+}
+
+.graph_matrix_header.graph_has_colour {
+  box-shadow: inset 0 -2px 0 var(--graph-colour-end, var(--line));
+}
+
+@supports (background: color-mix(in srgb, white, black)) {
+  .graph_force_node.graph_has_colour .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 58%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 70%, var(--fg));
+  }
+
+  .graph_force_node.graph_has_colour.is_selected .graph_force_node_circle,
+  .graph_force_node.graph_has_colour.is_connected .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 76%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 82%, var(--fg));
+  }
+
+  .graph_force_edge.graph_has_colour.is_connected,
+  .graph_force_edge.graph_has_colour.is_selected {
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 72%, var(--fg));
+  }
+
+  .graph_force_edge_label.graph_has_colour.is_connected,
+  .graph_force_edge_label.graph_has_colour.is_selected {
+    fill: color-mix(in srgb, var(--graph-colour-end, var(--line)) 72%, var(--fg));
+  }
+
+  .graph_matrix_cell.graph_has_colour.is_connected,
+  .graph_matrix_header.graph_has_colour.is_connected {
+    background: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 72%, var(--bg));
+    border-color: color-mix(in srgb, var(--graph-colour-end, var(--line)) 58%, var(--line));
+  }
+
+  .graph_matrix_cell.graph_has_colour.is_selected,
+  .graph_matrix_header.graph_has_colour.is_selected {
+    background: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 55%, var(--graph-colour-end, var(--line)));
+    border-color: color-mix(in srgb, var(--graph-colour-end, var(--line)) 75%, var(--fg));
+  }
+
+  .graph_has_colour.graph_detail {
+    border-top-color: color-mix(in srgb, var(--graph-colour-end, var(--line)) 70%, var(--line));
+  }
+
+}
+
+
+/* Graph node visual language.
+   Colour-driver nodes are solid pastel anchors with a clearer border.
+   Alternate-field nodes remain dashed and neutral until a selection gives them
+   a small connected-colour accent. */
+.graph_force_node_colour_driver.graph_has_colour .graph_force_node_circle,
+.graph_force_node_colour_driver.graph_has_colour.is_connected .graph_force_node_circle {
+  fill: var(--graph-colour-start, var(--panel));
+  stroke: var(--graph-colour-end, var(--line));
+  stroke-width: 1.9;
+  stroke-dasharray: 0;
+}
+
+.graph_force_node_colour_driver.graph_has_colour:hover .graph_force_node_circle,
+.graph_force_node_colour_driver.graph_has_colour:focus-visible .graph_force_node_circle {
+  fill: var(--graph-colour-start, var(--panel));
+  stroke: var(--graph-colour-end, var(--line));
+}
+
+.graph_force_node_alternate .graph_force_node_circle {
+  fill: var(--bg);
+  stroke: var(--muted);
+  stroke-width: 1.35;
+  stroke-dasharray: 2.5 2;
+}
+
+.graph_force_node_alternate.is_connected .graph_force_node_circle,
+.graph_force_node_alternate.is_selected .graph_force_node_circle {
+  fill: var(--graph-connected-colour-start, var(--line));
+  stroke: var(--graph-connected-colour-end, var(--fg));
+  stroke-width: 1.75;
+  stroke-dasharray: 2.5 2;
+}
+
+.graph_force_node_colour_driver.graph_has_colour.is_selected .graph_force_node_circle {
+  fill: var(--graph-colour-start, var(--panel));
+  stroke: var(--graph-colour-end, var(--line));
+  stroke-width: 2.8;
+  transform: scale(1.16);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@supports (background: color-mix(in srgb, white, black)) {
+  .graph_force_node_colour_driver.graph_has_colour .graph_force_node_circle,
+  .graph_force_node_colour_driver.graph_has_colour.is_connected .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 74%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 54%, var(--fg));
+  }
+
+  .graph_force_node_colour_driver.graph_has_colour:hover .graph_force_node_circle,
+  .graph_force_node_colour_driver.graph_has_colour:focus-visible .graph_force_node_circle,
+  .graph_force_node_colour_driver.graph_has_colour.is_selected .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 88%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 68%, var(--fg));
+  }
+
+  .graph_force_node_alternate.is_connected .graph_force_node_circle,
+  .graph_force_node_alternate.is_selected .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-connected-colour-start, var(--line)) 22%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-connected-colour-end, var(--line)) 56%, var(--fg));
+  }
+}
+
+@supports (background: color-mix(in srgb, white, black)) {
+  .graph_has_colour .graph_detail_card:hover,
+  .graph_has_colour .graph_detail_card:active,
+  .graph_has_colour .graph_detail_card:focus-visible {
+    background: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 72%, var(--bg));
+  }
+}
+
+@media (max-width: 760px) {
+  body:not(.side_closed) .metadata_graph_app,
+  body.side_closed .metadata_graph_app,
+  .metadata_graph_app {
+    width: 100%;
+  }
+}
+
+/* Cross-view hover continuity.
+   Hover previews are intentionally weaker than persistent click selections. */
+.graph_matrix_header.is_hovered,
+.graph_matrix_cell.is_hovered {
+  background: var(--line);
+  color: var(--fg);
+}
+
+.graph_matrix_header.is_hover_connected,
+.graph_matrix_cell.is_hover_connected {
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.graph_force_node.is_hovered .graph_force_node_circle {
+  fill: var(--line);
+  stroke-width: 2.15;
+}
+
+.graph_force_node.is_hover_connected .graph_force_node_circle {
+  fill: var(--line);
+  stroke-width: 1.65;
+}
+
+.graph_force_edge.is_hovered {
+  stroke: var(--fg);
+  stroke-opacity: .72;
+}
+
+.graph_force_edge.is_hover_connected {
+  stroke: var(--fg);
+  stroke-opacity: .46;
+}
+
+.graph_force_edge_label.is_hovered,
+.graph_force_edge_label.is_hover_connected {
+  font-weight: 700;
+}
+
+@supports (background: color-mix(in srgb, white, black)) {
+  .graph_matrix_header.graph_has_colour.is_hovered,
+  .graph_matrix_cell.graph_has_colour.is_hovered {
+    background: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 66%, var(--bg));
+    border-color: color-mix(in srgb, var(--graph-colour-end, var(--line)) 50%, var(--line));
+  }
+
+  .graph_matrix_header.graph_has_colour.is_hover_connected,
+  .graph_matrix_cell.graph_has_colour.is_hover_connected {
+    background: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 48%, var(--bg));
+  }
+
+  .graph_force_node.graph_has_colour.is_hovered .graph_force_node_circle,
+  .graph_force_node.graph_has_colour.is_hover_connected .graph_force_node_circle {
+    fill: color-mix(in srgb, var(--graph-colour-start, var(--panel)) 70%, var(--bg));
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 78%, var(--fg));
+  }
+
+  .graph_force_edge.graph_has_colour.is_hovered,
+  .graph_force_edge.graph_has_colour.is_hover_connected {
+    stroke: color-mix(in srgb, var(--graph-colour-end, var(--line)) 70%, var(--fg));
+  }
+}
+
+/* Keep graph geometry independent of sidebar open/closed state on desktop. */
+@media (min-width: 761px) {
+  main.graph_page_main,
+  body.side_closed main.graph_page_main {
+    --graph-main-width: min(var(--read), calc(100vw - var(--side) - 2.4rem));
+    --graph-analysis-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+    --graph-workspace-width: min(68rem, calc(100vw - var(--side) - 2.4rem));
+  }
+
+  .graph_controls,
+  .graph_summary,
+  .graph_matrix_panel,
+  .graph_workspace {
+    transition: none;
+  }
+}
+
+
+/* Mid-width graph alignment follows the centred closed-sidebar content column. */
+@media (min-width: 761px) and (max-width: 980px) {
+  body.side_closed main.graph_page_main {
+    --graph-main-width: min(var(--read), calc(100vw - 2.4rem));
+    --graph-analysis-width: 100%;
+    --graph-workspace-width: 100%;
+  }
+
+  body.side_closed .graph_controls,
+  body.side_closed .graph_summary,
+  body.side_closed .graph_matrix_panel,
+  body.side_closed .graph_workspace {
+    width: 100%;
+    margin-left: 0;
+  }
+}

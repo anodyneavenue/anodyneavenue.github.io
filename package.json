@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "check": "node --check build.js && node --check posts.js && node --check sidebar.js && node --check minimap.js && node --check scripts/verify_output.js",
+    "check": "node --check build.js && node --check posts.js && node --check sidebar.js && node --check minimap.js && node --check graph.js && node --check scripts/verify_output.js",
     "build": "node build.js",
     "verify": "npm run check && npm run build && node scripts/verify_output.js"
   },

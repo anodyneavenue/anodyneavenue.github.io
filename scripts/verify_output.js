@@ -16,6 +16,8 @@ const required_files = [
   "metadata/type/blog.html",
   "metadata/type/essays.html",
   "metadata/type/guides.html",
+  "metadata/graph.html",
+  "metadata/graph-data.json",
   "feed.xml",
   "blog/feed.xml",
   "essays/feed.xml",
@@ -25,6 +27,8 @@ const required_files = [
   "search-index.json",
   "404.html",
   "style.css",
+  "graph.css",
+  "graph.js",
   "sidebar.js",
   "minimap.js",
   "version.txt"
@@ -40,13 +44,17 @@ const core_html_files = [
   "metadata/type/blog.html",
   "metadata/type/essays.html",
   "metadata/type/guides.html",
+  "metadata/graph.html",
   "404.html"
 ];
 
 const expected_active_sidebars = {
   "posts/about.html": "about",
   "archive.html": "archive",
-  "metadata/tags.html": "tags",
+  "metadata.html": "metadata",
+  "metadata/tags.html": "metadata",
+  "metadata/type.html": "metadata",
+  "metadata/graph.html": "metadata",
   "metadata/type/blog.html": "blog",
   "metadata/type/essays.html": "essays",
   "metadata/type/guides.html": "guides"
@@ -142,18 +150,23 @@ function check_active_sidebars() {
   });
 }
 
-function check_json() {
-  const file = "search-index.json";
-
-  if (!file_exists(file)) {
-    return;
-  }
-
+function read_json(file) {
   try {
-    JSON.parse(read_file(file));
+    return JSON.parse(read_file(file));
   } catch (error) {
-    add_error("Invalid JSON in _site/search-index.json: " + error.message);
+    add_error("Invalid JSON in _site/" + file + ": " + error.message);
+    return null;
   }
+}
+
+function check_json() {
+  ["search-index.json", "metadata/graph-data.json"].forEach(function(file) {
+    if (!file_exists(file)) {
+      return;
+    }
+
+    read_json(file);
+  });
 }
 
 function check_rss() {
@@ -187,6 +200,7 @@ function check_sitemap() {
     site_url + "/",
     site_url + "/posts/about.html",
     site_url + "/archive.html",
+    site_url + "/metadata/graph.html",
     site_url + "/metadata.html",
     site_url + "/metadata/tags.html",
     site_url + "/metadata/type/blog.html"
@@ -211,6 +225,86 @@ function check_robots() {
   }
 }
 
+function check_graph() {
+  if (file_exists("metadata/graph.html")) {
+    const html = read_file("metadata/graph.html");
+
+    if (!html.includes("graph.css")) {
+      add_error("Missing graph.css reference in _site/metadata/graph.html");
+    }
+
+    if (!html.includes("graph.js")) {
+      add_error("Missing graph.js reference in _site/metadata/graph.html");
+    }
+
+    if (!html.includes('id="metadata_graph_app"')) {
+      add_error("Missing graph app mount point in _site/metadata/graph.html");
+    }
+  }
+
+  if (file_exists("metadata.html")) {
+    const metadata_html = read_file("metadata.html");
+
+    if (!metadata_html.includes('/metadata/graph.html')) {
+      add_error("Missing metadata graph link in _site/metadata.html");
+    }
+  }
+
+  if (file_exists("graph.js")) {
+    const graph_js = read_file("graph.js");
+
+    if (!graph_js.includes('/metadata/graph-data.json')) {
+      add_error("graph.js does not fetch /metadata/graph-data.json");
+    }
+  }
+
+  if (!file_exists("metadata/graph-data.json")) {
+    return;
+  }
+
+  const data = read_json("metadata/graph-data.json");
+
+  if (!data) {
+    return;
+  }
+
+  ["fields", "nodes", "edges", "posts"].forEach(function(key) {
+    if (!Array.isArray(data[key])) {
+      add_error("graph-data.json missing array: " + key);
+    }
+  });
+
+  if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+    return;
+  }
+
+  const node_ids = new Set(data.nodes.map(function(node) {
+    return node.id;
+  }));
+
+  data.nodes.forEach(function(node) {
+    ["id", "field", "label", "href"].forEach(function(key) {
+      if (!node[key]) {
+        add_error("Graph node missing " + key + ": " + JSON.stringify(node));
+      }
+    });
+  });
+
+  data.edges.forEach(function(edge) {
+    if (!node_ids.has(edge.source)) {
+      add_error("Graph edge source does not match a node: " + edge.id);
+    }
+
+    if (!node_ids.has(edge.target)) {
+      add_error("Graph edge target does not match a node: " + edge.id);
+    }
+
+    if (!Array.isArray(edge.posts)) {
+      add_error("Graph edge missing posts array: " + edge.id);
+    }
+  });
+}
+
 check_required_files();
 check_html_structure();
 check_active_sidebars();
@@ -218,6 +312,7 @@ check_json();
 check_rss();
 check_sitemap();
 check_robots();
+check_graph();
 
 if (errors.length) {
   console.error("Generated output verification failed:");

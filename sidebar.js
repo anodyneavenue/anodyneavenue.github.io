@@ -155,14 +155,6 @@ function current_sidebar_key_from_pathname(pathname) {
     return "archive";
   }
 
-  if (path === "/metadata/tags.html" || path === "/metadata/tags") {
-    return "tags";
-  }
-
-  if (path.startsWith("/metadata/tags/")) {
-    return "tags";
-  }
-
   if (path === "/metadata/type/essays.html" || path === "/metadata/type/essays") {
     return "essays";
   }
@@ -173,6 +165,14 @@ function current_sidebar_key_from_pathname(pathname) {
 
   if (path === "/metadata/type/blog.html" || path === "/metadata/type/blog") {
     return "blog";
+  }
+
+  if (path === "/metadata.html" || path === "/metadata") {
+    return "metadata";
+  }
+
+  if (path.startsWith("/metadata/")) {
+    return "metadata";
   }
 
   return "";
