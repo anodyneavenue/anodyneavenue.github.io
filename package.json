@@ -1,5 +1,6 @@
 {
   "scripts": {
-    "build": "node src/build.js"
+    "build": "node src/build.js",
+    "verify": "npm run build && test -f _site/index.html"
   }
 }
