@@ -1,64 +1,85 @@
 # .github/workflows/pages.yml
 
-name: build and deploy github pages
+name: build and deploy github pages # the name of the workflow
 
-on:
-  push:
+on: # conditions to trigger the workflow
+  push: # the condition being whenever something is pushed to the main branch!
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # manual trigger
 
 
-permissions:
+permissions: # the workflow can read and write the code in the repository
   contents: read
   pages: write
   id-token: write
 
-concurrency:
+concurrency: # what happens if multiple deploys triggered close together in time
   group: pages
   cancel-in-progress: true
+# essentially:
+# i push A, and then the process of deploying A starts
+# i then push B before A is finished
+# A is cancelled, and the process of deploying B starts...
 
+jobs: # what the workflow does:
+  # this workflow triggers the build/creation of the static site - the files output to _site, and;
+  # it deploys the site from the files present in _site
 
-jobs:
   build:
     name: build anodyne avenue
     runs-on: ubuntu-latest
 
 
-    steps:
+    steps: # sets up a machine using ubuntu
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # repository -> machine
 
-      - name: setup
+      - name: setup node # github use node v22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: install dependencies
+      - name: install dependencies # install deps that the build needs
         shell: bash
-        run: npm install
+        run: |
+          if [ -f package-lock.json]; then
+            npm ci
+          else
+            npm install
+          fi
 
-      - name: verifying build site output
-        run: test -f _site/index.html
+      # runs site checks and generates the final website
+      - name: verify and build site #
+        run: npm run verify
 
-      - name: upload site
-        uses: actions/upload-pages-artifact@v3
+      - name: ensure pages does not run jekyll # <--
+        run: touch _site/.nojekyll
+
+      - name: verify build site output
+        run: test -f _site/index.html # "don't deploy unless index.html exists
+
+      - name: configure pages
+        uses: actions/configure-pages@v5
+
+      - name: upload site # <--
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./_site
 
-  deploy:
+  deploy: # published to github
     name: deploy the site
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # only runs the deploy job if the build was successful
 
-    permissions:
+    permissions: # of deploy job
       pages: write
       id-token: write
 
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }} # deployment url
 
     steps:
       - name: deploy
