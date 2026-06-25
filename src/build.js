@@ -20,12 +20,12 @@
 
 const path = require("path");
 const posts = require("../content/posts.js");
-const main_sections = require("../content/main_sections.js");
+// const main_sections = require("../content/main_sections.js");
 const fs = require("node:fs");
-const {labels, label_descriptions} = require("../content/site_metadata.js");
+const {section_labels, section_label_descriptions} = require("../content/site_metadata.js");
+const {section_content} = require("../content/site_metadata");
 
-const source_root = __dirname;
-const root = path.join(source_root, "..")
+const root = path.join(__dirname, "..")
 const output = path.join(root, "_site");
 
 // urls
@@ -68,7 +68,7 @@ function lines(parts) { // turns an array of html lines into one string of html
 
 // html_shell is the framework of each web-page on the site
 // all are parsed inside and their content turned into html
-function html_shell(entries){
+function html_shell(entries) {
     const shell_title = entries.title;
     const shell_description = entries.description || "";
     const shell_content = Array.isArray(entries.content) ? entries.content.join("\n"):
@@ -76,12 +76,12 @@ function html_shell(entries){
 
     return lines([
         "<!DOCTYPE html>",
-        "<html lang='en-GB'>",
+        "<html lang ='en-GB'>",
         "<head>",
-        "<meta charset='utf-8'>",
-        "<meta name='viewport' content='width=device-width, initial-scale=1'>",
+        "<meta charset = 'utf-8'>",
+        "<meta name = 'viewport' content = 'width = device-width, initial-scale = 1'>",
         "<title>" + shell_title + "</title>",
-        "<meta name='description' content='" + shell_description + "'>",
+        "<meta name = 'description' content = '" + shell_description + "'>",
         "</head>",
         "<body>",
         "<main>",
@@ -102,23 +102,32 @@ function write_file(file, content){
 
 
 // >>>>>>>>>>>>
-// Landing Page
+// landing page
 // <<<<<<<<<<<<
 
 function build_landing_page() {
 
     write_file("index.html", html_shell({
-        title: labels.landing,
-        description: label_descriptions.landing,
-        content: [
-            "",
-            "<h1>Deep dives into topics of interest.</h1>",
-            "",
-        ]
+        title: section_labels.landing,
+        description: section_label_descriptions.landing,
+        content: section_content.landing,
 
         })
     );
 }
+
+// >>>>>>>>
+// 404 page
+// <<<<<<<<<
+
+function build_404() {
+    write_file("404.html", html_shell({
+        title: section_labels.error_404,
+        description: section_label_descriptions.error_404,
+        content: section_content.error_404,
+    }))
+}
+
 
 // >>>>>>>>>>>>>
 // Metadata Page
@@ -166,6 +175,7 @@ const post_type_order = ["Blog", "Guides", "Essays", "References"];
 
 function build(){
     build_landing_page()
+    build_404()
 }
 
 build() // built!!! woo!
