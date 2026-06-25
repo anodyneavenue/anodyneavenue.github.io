@@ -1,27 +1,66 @@
-name: build pages
+# .github/workflows/pages.yml
+
+name: build and deploy github pages
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    # I need to add dependencies
-  # and also actions...
 
 
-# permissions?
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-# concurrency?
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 
 jobs:
   build:
+    name: build anodyne avenue
     runs-on: ubuntu-latest
 
-  deploy:
-    environment:
-      name: github-pages
 
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: install dependencies
+        shell: bash
+        run: npm install
+
+      - name: verifying build site output
+        run: test -f _site/index.html
+
+      - name: upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    name: deploy the site
     runs-on: ubuntu-latest
     needs: build
 
-    # steps?
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
